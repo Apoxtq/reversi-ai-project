@@ -1,0 +1,226 @@
+# ==================== 编译输出 ====================
+
+# CMake 构建目录
+build/
+cmake-build-*/
+out/
+
+# 可执行文件
+*.exe
+*.out
+*.app
+
+# 目标文件
+*.o
+*.obj
+*.lo
+*.slo
+
+# 预编译头文件
+*.gch
+*.pch
+
+# 库文件
+*.lib
+*.a
+*.la
+*.so
+*.so.*
+*.dylib
+*.dll
+
+# ==================== IDE 配置 ====================
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# Visual Studio
+.vs/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# CLion
+.idea/
+cmake-build-*/
+
+# Xcode
+*.xcodeproj
+*.xcworkspace
+xcuserdata/
+
+# Eclipse
+.cproject
+.project
+.settings/
+
+# ==================== 操作系统 ====================
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ==================== 依赖管理 ====================
+
+# vcpkg
+vcpkg_installed/
+.vcpkg/
+
+# Conan
+conan.lock
+conanbuildinfo.*
+conaninfo.txt
+
+# ==================== 临时文件 ====================
+
+# 编辑器临时文件
+*.swp
+*.swo
+*.swn
+*.bak
+*.tmp
+*.temp
+
+# 日志文件
+*.log
+
+# 备份文件
+*~
+*.orig
+
+# ==================== 测试和性能分析 ====================
+
+# Google Test
+googletest/
+gtest/
+
+# 性能分析
+*.prof
+gmon.out
+perf.data
+perf.data.old
+callgrind.out.*
+massif.out.*
+
+# 覆盖率
+*.gcov
+*.gcda
+*.gcno
+coverage/
+*.profdata
+
+# Valgrind
+valgrind-out.txt
+*.memcheck
+
+# ==================== 文档生成 ====================
+
+# Doxygen
+docs/html/
+docs/latex/
+docs/doxygen_warnings.txt
+
+# Sphinx
+docs/_build/
+docs/_static/
+docs/_templates/
+
+# ==================== 资源文件（可选） ====================
+
+# 大文件（模型、数据集等）
+*.model
+*.weights
+*.tar
+*.gz
+*.zip
+*.7z
+
+# 训练数据（如果需要排除）
+# data/
+# datasets/
+
+# ==================== 项目特定 ====================
+
+# 游戏保存文件
+*.save
+*.replay
+
+# Benchmark 结果
+benchmark_results/
+*.csv
+*.xlsx
+
+# 性能测试输出
+perf_*.txt
+
+# 神经网络模型（如果很大）
+models/*.pth
+models/*.onnx
+
+# ==================== 开发笔记 ====================
+
+# 个人笔记（如果不想提交）
+# notes/personal/
+# *.draft.md
+
+# 临时TODO
+# TODO.tmp.md
+
+# ==================== 机密信息 ====================
+
+# API密钥
+.env
+*.key
+*.pem
+*.cert
+
+# 配置文件（如果包含敏感信息）
+config.local.*
+secrets.json
+
+# ==================== 其他 ====================
+
+# Python（如果有辅助脚本）
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+
+# Node.js（如果有可视化工具）
+node_modules/
+npm-debug.log*
+
+# Rust（如果有）
+target/
+Cargo.lock
+
+# ==================== 保留示例 ====================
+
+# 确保示例文件被提交
+!examples/*.cpp
+!examples/*.h
+!assets/README.md
+

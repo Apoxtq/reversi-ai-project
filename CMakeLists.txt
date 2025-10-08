@@ -1,0 +1,230 @@
+cmake_minimum_required(VERSION 3.20)
+project(ReversiAI VERSION 1.0.0 LANGUAGES CXX)
+
+# C++ 标准设置
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# 编译选项
+if(MSVC)
+    # Visual Studio 编译器选项
+    add_compile_options(/W4 /WX- /permissive-)
+    # Release 优化
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2 /Ob2")
+else()
+    # GCC/Clang 编译器选项
+    add_compile_options(-Wall -Wextra -Wpedantic)
+    # Release 优化
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -DNDEBUG")
+    # Debug 选项
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0 -fsanitize=address")
+endif()
+
+# 输出目录设置
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+
+# ==================== 依赖项配置 ====================
+
+# 查找 SFML
+find_package(SFML 2.5 COMPONENTS system window graphics network audio)
+
+# 查找 Google Test（可选，用于测试）
+find_package(GTest)
+
+# ==================== 项目源文件 ====================
+
+# 核心库源文件
+set(CORE_SOURCES
+    # Board 相关（待实现）
+    # src/core/Board.cpp
+    # src/core/Move.cpp
+    # src/core/GameState.cpp
+)
+
+# AI 引擎源文件
+set(AI_SOURCES
+    # Minimax 引擎（待实现）
+    # src/ai/MinimaxEngine.cpp
+    # src/ai/MCTSEngine.cpp
+    # src/ai/Evaluator.cpp
+    # src/ai/TranspositionTable.cpp
+)
+
+# UI 源文件
+set(UI_SOURCES
+    # UI 实现（待实现）
+    # src/ui/GameUI.cpp
+    # src/ui/BoardRenderer.cpp
+    # src/ui/MenuSystem.cpp
+)
+
+# 网络源文件
+set(NETWORK_SOURCES
+    # 网络实现（待实现）
+    # src/network/Protocol.cpp
+    # src/network/NetworkGame.cpp
+    # src/network/RoomManager.cpp
+)
+
+# ==================== 库目标 ====================
+
+# 核心库（当前为空，后续添加源文件）
+if(CORE_SOURCES)
+    add_library(reversi_core STATIC ${CORE_SOURCES})
+    target_include_directories(reversi_core PUBLIC 
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+    )
+endif()
+
+# AI 引擎库
+if(AI_SOURCES)
+    add_library(reversi_ai STATIC ${AI_SOURCES})
+    target_include_directories(reversi_ai PUBLIC 
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/ai
+    )
+    if(TARGET reversi_core)
+        target_link_libraries(reversi_ai PUBLIC reversi_core)
+    endif()
+endif()
+
+# UI 库（依赖 SFML）
+if(UI_SOURCES AND SFML_FOUND)
+    add_library(reversi_ui STATIC ${UI_SOURCES})
+    target_include_directories(reversi_ui PUBLIC 
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/ui
+    )
+    target_link_libraries(reversi_ui PUBLIC 
+        sfml-system sfml-window sfml-graphics
+    )
+    if(TARGET reversi_core)
+        target_link_libraries(reversi_ui PUBLIC reversi_core)
+    endif()
+endif()
+
+# 网络库（依赖 SFML Network）
+if(NETWORK_SOURCES AND SFML_FOUND)
+    add_library(reversi_network STATIC ${NETWORK_SOURCES})
+    target_include_directories(reversi_network PUBLIC 
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/network
+    )
+    target_link_libraries(reversi_network PUBLIC 
+        sfml-system sfml-network
+    )
+    if(TARGET reversi_core)
+        target_link_libraries(reversi_network PUBLIC reversi_core)
+    endif()
+endif()
+
+# ==================== 主程序 ====================
+
+# 主程序（当前创建占位符）
+add_executable(reversi_ai src/main.cpp)
+
+# 链接所有库（如果存在）
+if(TARGET reversi_core)
+    target_link_libraries(reversi_ai PRIVATE reversi_core)
+endif()
+if(TARGET reversi_ai_lib)
+    target_link_libraries(reversi_ai PRIVATE reversi_ai_lib)
+endif()
+if(TARGET reversi_ui)
+    target_link_libraries(reversi_ai PRIVATE reversi_ui)
+endif()
+if(TARGET reversi_network)
+    target_link_libraries(reversi_ai PRIVATE reversi_network)
+endif()
+
+# 链接 SFML（如果找到）
+if(SFML_FOUND)
+    target_link_libraries(reversi_ai PRIVATE 
+        sfml-system sfml-window sfml-graphics sfml-network
+    )
+endif()
+
+# ==================== 测试 ====================
+
+if(GTEST_FOUND)
+    enable_testing()
+    
+    # Board 测试（待实现）
+    # add_executable(board_test tests/BoardTest.cpp)
+    # target_link_libraries(board_test PRIVATE reversi_core GTest::GTest GTest::Main)
+    # add_test(NAME BoardTest COMMAND board_test)
+    
+    # Minimax 测试（待实现）
+    # add_executable(minimax_test tests/MinimaxTest.cpp)
+    # target_link_libraries(minimax_test PRIVATE reversi_ai GTest::GTest GTest::Main)
+    # add_test(NAME MinimaxTest COMMAND minimax_test)
+    
+    # MCTS 测试（待实现）
+    # add_executable(mcts_test tests/MCTSTest.cpp)
+    # target_link_libraries(mcts_test PRIVATE reversi_ai GTest::GTest GTest::Main)
+    # add_test(NAME MCTSTest COMMAND mcts_test)
+endif()
+
+# ==================== Benchmark ====================
+
+# Benchmark 程序（待实现）
+# add_executable(reversi_benchmark src/benchmark.cpp)
+# target_link_libraries(reversi_benchmark PRIVATE reversi_core reversi_ai)
+
+# ==================== 安装配置 ====================
+
+# 安装可执行文件
+install(TARGETS reversi_ai
+    RUNTIME DESTINATION bin
+)
+
+# 安装资源文件（如果有）
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/assets)
+    install(DIRECTORY assets/
+        DESTINATION share/reversi-ai/assets
+    )
+endif()
+
+# ==================== 打包配置 ====================
+
+set(CPACK_PACKAGE_NAME "ReversiAI")
+set(CPACK_PACKAGE_VENDOR "Tianqixing")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Reversi AI Algorithm Benchmarking Platform")
+set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+
+include(CPack)
+
+# ==================== 信息输出 ====================
+
+message(STATUS "")
+message(STATUS "========== Reversi AI Project Configuration ==========")
+message(STATUS "Project version: ${PROJECT_VERSION}")
+message(STATUS "C++ standard: C++${CMAKE_CXX_STANDARD}")
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
+message(STATUS "")
+message(STATUS "Dependencies:")
+message(STATUS "  SFML: ${SFML_FOUND}")
+message(STATUS "  Google Test: ${GTEST_FOUND}")
+message(STATUS "")
+message(STATUS "Build targets:")
+if(TARGET reversi_core)
+    message(STATUS "  ✓ reversi_core")
+endif()
+if(TARGET reversi_ai_lib)
+    message(STATUS "  ✓ reversi_ai_lib")
+endif()
+if(TARGET reversi_ui)
+    message(STATUS "  ✓ reversi_ui")
+endif()
+if(TARGET reversi_network)
+    message(STATUS "  ✓ reversi_network")
+endif()
+message(STATUS "  ✓ reversi_ai (main executable)")
+message(STATUS "")
+message(STATUS "Output directory: ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+message(STATUS "======================================================")
+message(STATUS "")
+
