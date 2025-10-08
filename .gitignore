@@ -1,226 +1,104 @@
-# ==================== 编译输出 ====================
-
-# CMake 构建目录
+# Build directories
 build/
-cmake-build-*/
+build_temp/
 out/
+bin/
+lib/
 
-# 可执行文件
+# Executables
 *.exe
 *.out
 *.app
 
-# 目标文件
+# Object files
 *.o
 *.obj
-*.lo
-*.slo
-
-# 预编译头文件
-*.gch
-*.pch
-
-# 库文件
-*.lib
 *.a
-*.la
-*.so
-*.so.*
-*.dylib
+*.lib
 *.dll
+*.so
+*.dylib
 
-# ==================== IDE 配置 ====================
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
 
-# Visual Studio Code
-.vscode/
-*.code-workspace
-
-# Visual Studio
+# IDE files
 .vs/
-*.sln
-*.vcxproj
-*.vcxproj.filters
-*.vcxproj.user
+.vscode/settings.json
+.vscode/launch.json
+.vscode/.ropeproject
 *.suo
 *.user
 *.userosscache
 *.sln.docstates
+*.vcxproj*
+*.sln
 
-# CLion
-.idea/
-cmake-build-*/
-
-# Xcode
-*.xcodeproj
-*.xcworkspace
-xcuserdata/
-
-# Eclipse
-.cproject
-.project
-.settings/
-
-# ==================== 操作系统 ====================
-
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-$RECYCLE.BIN/
-*.lnk
-
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-._*
-
-# Linux
-*~
-.directory
-.Trash-*
-
-# ==================== 依赖管理 ====================
-
-# vcpkg
-vcpkg_installed/
-.vcpkg/
-
-# Conan
-conan.lock
-conanbuildinfo.*
-conaninfo.txt
-
-# ==================== 临时文件 ====================
-
-# 编辑器临时文件
-*.swp
-*.swo
-*.swn
-*.bak
-*.tmp
-*.temp
-
-# 日志文件
+# Temporary files
 *.log
-
-# 备份文件
+*.tmp
+*.swp
 *~
-*.orig
+output.txt
+cmake_output.txt
 
-# ==================== 测试和性能分析 ====================
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
 
-# Google Test
-googletest/
-gtest/
+# Test results
+test_results/
+*.xml
 
-# 性能分析
-*.prof
-gmon.out
-perf.data
-perf.data.old
-callgrind.out.*
-massif.out.*
-
-# 覆盖率
-*.gcov
-*.gcda
-*.gcno
-coverage/
-*.profdata
-
-# Valgrind
-valgrind-out.txt
-*.memcheck
-
-# ==================== 文档生成 ====================
-
-# Doxygen
-docs/html/
-docs/latex/
-docs/doxygen_warnings.txt
-
-# Sphinx
+# Documentation build
 docs/_build/
-docs/_static/
-docs/_templates/
+docs/.doctrees/
 
-# ==================== 资源文件（可选） ====================
-
-# 大文件（模型、数据集等）
-*.model
-*.weights
-*.tar
-*.gz
-*.zip
-*.7z
-
-# 训练数据（如果需要排除）
-# data/
-# datasets/
-
-# ==================== 项目特定 ====================
-
-# 游戏保存文件
-*.save
-*.replay
-
-# Benchmark 结果
-benchmark_results/
-*.csv
-*.xlsx
-
-# 性能测试输出
-perf_*.txt
-
-# 神经网络模型（如果很大）
-models/*.pth
-models/*.onnx
-
-# ==================== 开发笔记 ====================
-
-# 个人笔记（如果不想提交）
-# notes/personal/
-# *.draft.md
-
-# 临时TODO
-# TODO.tmp.md
-
-# ==================== 机密信息 ====================
-
-# API密钥
-.env
-*.key
-*.pem
-*.cert
-
-# 配置文件（如果包含敏感信息）
-config.local.*
-secrets.json
-
-# ==================== 其他 ====================
-
-# Python（如果有辅助脚本）
+# Python (if using Python scripts)
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
+*.pyc
+*.pyo
+*.pyd
 .Python
 venv/
 env/
+ENV/
 
-# Node.js（如果有可视化工具）
-node_modules/
-npm-debug.log*
+# Research data (large files)
+data/raw/
+*.pgn
+*.ggf
+*.gam
 
-# Rust（如果有）
-target/
-Cargo.lock
+# Backup files
+*.bak
+*.backup
+*~
 
-# ==================== 保留示例 ====================
+# Profiling data
+*.prof
+gmon.out
+callgrind.*
+perf.data*
 
-# 确保示例文件被提交
-!examples/*.cpp
-!examples/*.h
-!assets/README.md
+# Coverage data
+*.gcda
+*.gcno
+*.gcov
+coverage/
 
+# Project documentation - DO NOT IGNORE, THESE ARE IMPORTANT!
+# Core docs: PROJECT_PLAN.md, TECHNICAL_ISSUES_SOLUTIONS.md, AI_COLLABORATION_RULES.md
+# GitHub docs in project_docs/github/
+# All documentation should be version controlled!
+
+# Keep important directories
+!docs/
+!data/test_positions/
+!.gitkeep

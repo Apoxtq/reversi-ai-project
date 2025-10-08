@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(ReversiAI VERSION 1.0.0 LANGUAGES CXX)
 
 # C++ 标准设置
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -28,20 +28,28 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 # ==================== 依赖项配置 ====================
 
-# 查找 SFML
+# 查找 SFML (optional for now, required before Week 7)
 find_package(SFML 2.5 COMPONENTS system window graphics network audio)
+if(NOT SFML_FOUND)
+    message(WARNING "SFML not found. UI and Network features will be disabled.")
+    message(WARNING "Install SFML before Week 7: scoop install sfml")
+endif()
 
-# 查找 Google Test（可选，用于测试）
+# 查找 Google Test (optional, required before Week 3)
 find_package(GTest)
+if(NOT GTEST_FOUND)
+    message(WARNING "Google Test not found. Unit tests will be disabled.")
+    message(WARNING "Install Google Test before Week 3: scoop install gtest")
+endif()
 
 # ==================== 项目源文件 ====================
 
 # 核心库源文件
 set(CORE_SOURCES
-    # Board 相关（待实现）
-    # src/core/Board.cpp
-    # src/core/Move.cpp
-    # src/core/GameState.cpp
+    # Board 相关
+    src/core/Board.cpp
+    src/core/Move.cpp
+    # src/core/GameState.cpp  # To be implemented Week 3
 )
 
 # AI 引擎源文件
@@ -67,6 +75,13 @@ set(NETWORK_SOURCES
     # src/network/Protocol.cpp
     # src/network/NetworkGame.cpp
     # src/network/RoomManager.cpp
+)
+
+# 研究评估源文件
+set(RESEARCH_SOURCES
+    # 性能测试框架
+    src/research/benchmark/Benchmark.cpp
+    # src/research/AlgorithmComparison.cpp  # Week 10-11
 )
 
 # ==================== 库目标 ====================
@@ -118,6 +133,20 @@ if(NETWORK_SOURCES AND SFML_FOUND)
     endif()
 endif()
 
+# 研究评估库
+if(RESEARCH_SOURCES)
+    add_library(reversi_research STATIC ${RESEARCH_SOURCES})
+    target_include_directories(reversi_research PUBLIC 
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/research
+    )
+    if(TARGET reversi_core)
+        target_link_libraries(reversi_research PUBLIC reversi_core)
+    endif()
+    if(TARGET reversi_ai)
+        target_link_libraries(reversi_research PUBLIC reversi_ai)
+    endif()
+endif()
+
 # ==================== 主程序 ====================
 
 # 主程序（当前创建占位符）
@@ -127,8 +156,8 @@ add_executable(reversi_ai src/main.cpp)
 if(TARGET reversi_core)
     target_link_libraries(reversi_ai PRIVATE reversi_core)
 endif()
-if(TARGET reversi_ai_lib)
-    target_link_libraries(reversi_ai PRIVATE reversi_ai_lib)
+if(TARGET reversi_ai)  # Fixed: was reversi_ai_lib
+    # AI library will be linked when it exists
 endif()
 if(TARGET reversi_ui)
     target_link_libraries(reversi_ai PRIVATE reversi_ui)

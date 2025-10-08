@@ -18,17 +18,17 @@
 
 // 简单的Bitboard演示
 void demonstrateBitboard() {
-    std::cout << "\n=== Bitboard 演示 ===" << std::endl;
+    std::cout << "\n=== Bitboard Demo ===" << std::endl;
     
     // 黑白棋初始状态
     uint64_t player = 0x0000000810000000ULL;    // 玩家（白子）
     uint64_t opponent = 0x0000001008000000ULL;  // 对手（黑子）
     
-    std::cout << "玩家棋子数量: " << __builtin_popcountll(player) << std::endl;
-    std::cout << "对手棋子数量: " << __builtin_popcountll(opponent) << std::endl;
+    std::cout << "Player pieces: " << __builtin_popcountll(player) << std::endl;
+    std::cout << "Opponent pieces: " << __builtin_popcountll(opponent) << std::endl;
     
     // 显示棋盘（简化版）
-    std::cout << "\n初始棋盘状态:" << std::endl;
+    std::cout << "\nInitial Board State:" << std::endl;
     std::cout << "  A B C D E F G H" << std::endl;
     
     for (int row = 0; row < 8; ++row) {
@@ -55,42 +55,42 @@ void printProjectInfo() {
     std::cout << "========================================" << std::endl;
     std::cout << "  " << PROJECT_NAME << " v" << PROJECT_VERSION << std::endl;
     std::cout << "========================================" << std::endl;
-    std::cout << "项目: COMP390 Honours Year Project" << std::endl;
-    std::cout << "学生: Tianqixing (201821852)" << std::endl;
-    std::cout << "主题: 黑白棋AI算法比较与优化研究" << std::endl;
+    std::cout << "Project: COMP390 Honours Year Project" << std::endl;
+    std::cout << "Student: Tianqixing (201821852)" << std::endl;
+    std::cout << "Topic: Reversi AI Algorithm Benchmarking" << std::endl;
     std::cout << "========================================" << std::endl;
 }
 
 // 打印开发状态
 void printStatus() {
-    std::cout << "\n当前开发状态:" << std::endl;
+    std::cout << "\nDevelopment Status:" << std::endl;
     std::cout << "----------------------------------------" << std::endl;
-    std::cout << "✅ Phase 0: 环境配置完成" << std::endl;
-    std::cout << "✅ 项目结构创建完成" << std::endl;
-    std::cout << "🔄 Phase 1: Week 1 - Bitboard学习中..." << std::endl;
-    std::cout << "⏳ Phase 2: 核心引擎开发（待开始）" << std::endl;
-    std::cout << "⏳ Phase 3: UI与网络（待开始）" << std::endl;
-    std::cout << "⏳ Phase 4: 测试与文档（待开始）" << std::endl;
+    std::cout << "[DONE] Phase 0: Environment Setup" << std::endl;
+    std::cout << "[DONE] Project Structure Created" << std::endl;
+    std::cout << "[ACTIVE] Phase 1: Week 1 - Bitboard Learning" << std::endl;
+    std::cout << "[PENDING] Phase 2: Core Engine Development" << std::endl;
+    std::cout << "[PENDING] Phase 3: UI & Network" << std::endl;
+    std::cout << "[PENDING] Phase 4: Testing & Documentation" << std::endl;
     std::cout << "----------------------------------------" << std::endl;
 }
 
 // 打印编译信息
 void printCompileInfo() {
-    std::cout << "\n编译信息:" << std::endl;
+    std::cout << "\nBuild Information:" << std::endl;
     std::cout << "----------------------------------------" << std::endl;
     
-    // C++ 标准
-    std::cout << "C++ 标准: ";
+    // C++ Standard
+    std::cout << "C++ Standard: ";
     #if __cplusplus == 201703L
         std::cout << "C++17" << std::endl;
     #elif __cplusplus == 202002L
         std::cout << "C++20" << std::endl;
     #else
-        std::cout << "未知 (" << __cplusplus << ")" << std::endl;
+        std::cout << "Unknown (" << __cplusplus << ")" << std::endl;
     #endif
     
-    // 编译器信息
-    std::cout << "编译器: ";
+    // Compiler Info
+    std::cout << "Compiler: ";
     #if defined(__GNUC__)
         std::cout << "GCC " << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__ << std::endl;
     #elif defined(_MSC_VER)
@@ -98,18 +98,18 @@ void printCompileInfo() {
     #elif defined(__clang__)
         std::cout << "Clang " << __clang_major__ << "." << __clang_minor__ << std::endl;
     #else
-        std::cout << "未知" << std::endl;
+        std::cout << "Unknown" << std::endl;
     #endif
     
-    // 构建类型
+    // Build Type
     #ifdef NDEBUG
-        std::cout << "构建类型: Release" << std::endl;
+        std::cout << "Build Type: Release" << std::endl;
     #else
-        std::cout << "构建类型: Debug" << std::endl;
+        std::cout << "Build Type: Debug" << std::endl;
     #endif
     
-    // 平台信息
-    std::cout << "平台: ";
+    // Platform
+    std::cout << "Platform: ";
     #if defined(_WIN32) || defined(_WIN64)
         std::cout << "Windows";
         #ifdef _WIN64
@@ -122,7 +122,7 @@ void printCompileInfo() {
     #elif defined(__APPLE__)
         std::cout << "macOS";
     #else
-        std::cout << "未知";
+        std::cout << "Unknown";
     #endif
     std::cout << std::endl;
     
@@ -143,13 +143,13 @@ int main(int argc, char* argv[]) {
     // Bitboard 演示
     demonstrateBitboard();
     
-    // 欢迎信息
-    std::cout << "\n📚 下一步:" << std::endl;
-    std::cout << "1. 完成 Week 1 Bitboard 学习" << std::endl;
-    std::cout << "2. 实现 Board 类（Week 3）" << std::endl;
-    std::cout << "3. 实现 Minimax 引擎（Week 4）" << std::endl;
-    std::cout << "4. 实现 MCTS 引擎（Week 5）" << std::endl;
-    std::cout << "\n🚀 项目启动成功！开始你的学习之旅吧！\n" << std::endl;
+    // Next Steps
+    std::cout << "\nNext Steps:" << std::endl;
+    std::cout << "1. Complete Week 1 Bitboard Learning" << std::endl;
+    std::cout << "2. Implement Board Class (Week 3)" << std::endl;
+    std::cout << "3. Implement Minimax Engine (Week 4)" << std::endl;
+    std::cout << "4. Implement MCTS Engine (Week 5)" << std::endl;
+    std::cout << "\nProject initialization successful!\n" << std::endl;
     
     return 0;
 }
