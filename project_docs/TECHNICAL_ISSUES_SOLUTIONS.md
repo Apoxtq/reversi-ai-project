@@ -988,6 +988,255 @@ std::vector<Move> get_moves() const {
 
 ---
 
+## ✅ Week 1 实际遇到的问题（2025-10-11）
+
+### 🔴 问题W1.1: 合法移动生成 - 边界Wraparound
+
+**严重程度：** 高  
+**发生时间：** Week 1, Day 3  
+**问题描述：**
+- 实现方向扫描时，位移操作在棋盘边缘产生错误结果
+- 例如：A列的棋子左移1位会出现在H列（位环绕）
+
+**具体表现：**
+```cpp
+// A1位置 (pos=0, bit=0x1)
+uint64_t left = bb << 1;  // 变成 0x2 (B1) ✅
+// A2位置 (pos=8, bit=0x100)  
+uint64_t left = bb << 1;  // 变成 0x200 (B2) ✅
+// 但从A8 (pos=56) 连续左移会环绕到H7!
+```
+
+**根本原因：**
+- 64位整数的位移操作不理解棋盘的8×8结构
+- 每行8个位，但bitboard连续存储
+- A列(0,8,16...)左移会进入前一行的H列
+
+**解决方案：**
+```cpp
+// Board.cpp - 方向掩码
+constexpr uint64_t NOT_A_FILE = 0xFEFEFEFEFEFEFEFEULL; // A列=0
+constexpr uint64_t NOT_H_FILE = 0x7F7F7F7F7F7F7F7FULL; // H列=0
+
+// 安全的左移（防止A列环绕）
+inline uint64_t shift_left(uint64_t bb) {
+    return (bb & NOT_A_FILE) << 1;
+}
+
+// 安全的右移（防止H列环绕）
+inline uint64_t shift_right(uint64_t bb) {
+    return (bb & NOT_H_FILE) >> 1;
+}
+
+// 对角线移动需要组合掩码
+inline uint64_t shift_up_left(uint64_t bb) {
+    return (bb & NOT_A_FILE) << 9;
+}
+```
+
+**测试验证：**
+```cpp
+// A1位置测试
+uint64_t a1 = 0x1;
+assert(shift_left(a1) == 0);  // A列左移应该返回0
+
+// H1位置测试  
+uint64_t h1 = 0x80;
+assert(shift_right(h1) == 0); // H列右移应该返回0
+```
+
+**相关文件：**
+- `src/core/Board.cpp` (lines 22-42)
+
+**参考来源：**
+- Egaroucid: `src/engine/board.hpp` (掩码定义)
+- Chess Programming Wiki: Bitboard移动生成
+
+**经验教训：**
+- Bitboard操作必须考虑棋盘物理边界
+- 所有方向移动都需要对应的边界掩码
+- 测试边界情况至关重要
+
+---
+
+### 🟡 问题W1.2: 合法移动生成 - 扫描终止条件
+
+**严重程度：** 中  
+**发生时间：** Week 1, Day 3  
+**问题描述：**
+- 初期实现的方向扫描生成了错误的合法移动
+- 空位被识别为合法移动，但实际无法翻转任何棋子
+
+**错误逻辑：**
+```cpp
+// ❌ 错误的实现
+uint64_t scan_direction(uint64_t start, uint64_t player, uint64_t opp) {
+    uint64_t shifted = shift(start);
+    while ((shifted & opp) != 0) {
+        shifted = shift(shifted);
+    }
+    return shifted;  // 返回第一个非对手的位置（可能是空位！）
+}
+```
+
+**根本原因：**
+- 黑白棋的夹击规则：必须是"己方-连续对手-己方"
+- 错误实现只检查了连续的对手棋子
+- 未验证扫描末端是否是己方棋子
+
+**正确解决方案：**
+```cpp
+// ✅ 正确的实现
+uint64_t scan_direction(uint64_t start_bb, uint64_t player, uint64_t opponent) {
+    uint64_t shifted = shift(start_bb);
+    
+    // 第一步必须是对手棋子
+    if ((shifted & opponent) == 0) {
+        return 0;  // 紧邻不是对手，无法夹击
+    }
+    
+    // 累积中间的对手棋子
+    uint64_t candidates = 0;
+    while ((shifted & opponent) != 0) {
+        candidates |= shifted;  // 记录这些对手棋子
+        shifted = shift(shifted);
+    }
+    
+    // 检查末端是否是己方棋子
+    if ((shifted & player) != 0) {
+        return candidates;  // 确认夹击成功
+    }
+    
+    return 0;  // 末端不是己方，不能翻转
+}
+```
+
+**关键点：**
+1. **起始检查**: 紧邻位置必须是对手
+2. **中间扫描**: 连续的对手棋子
+3. **末端验证**: 必须以己方棋子结束
+4. **返回值**: 返回可翻转的对手棋子bitboard
+
+**测试案例：**
+```
+初始位置:
+  A B C D E F G H
+4 . . . O X . . .
+
+Black (X) 在 D4:
+- 向右扫描: E4(O) -> F4(X) ✅ 可以翻转E4
+- 向左扫描: C4(空) ❌ 不能翻转（紧邻是空位）
+
+结果: D4 是合法移动（可翻转E4的O）
+```
+
+**相关文件：**
+- `src/core/Board.cpp` - `calc_legal_impl()` (lines 88-170)
+
+**参考来源：**
+- Rust Reversi: `src/rules.rs` - 清晰的扫描逻辑
+- 自主分析黑白棋规则
+
+**经验教训：**
+- 实现游戏规则时要严格按照定义
+- 夹击 = 两端是己方 + 中间全是对手
+- 边界case要单独考虑
+
+---
+
+### 🟡 问题W1.3: Player/Opponent视角混淆
+
+**严重程度：** 中  
+**发生时间：** Week 1, Day 3  
+**问题描述：**
+- `make_move()`执行后，下一个玩家的合法移动计算错误
+- 测试显示对手有4个合法移动，但实际应该是3个
+
+**根本原因：**
+```cpp
+void Board::make_move(int pos) {
+    uint64_t move_bb = 1ULL << pos;
+    uint64_t flipped = calc_flip(move_bb);
+    
+    player |= move_bb | flipped;   // 放置棋子+翻转
+    opponent &= ~flipped;          // 移除被翻转的对手棋子
+    
+    // ❌ 忘记交换视角！
+    // 下一个调用legal_moves()时，仍然是原player的视角
+}
+```
+
+**问题表现：**
+```
+初始: player=White, opponent=Black
+执行: White在d6落子
+预期: 轮到Black，应该从Black视角看
+实际: 仍从White视角看，生成错误的合法移动
+```
+
+**正确解决方案：**
+```cpp
+void Board::make_move(int pos) {
+    uint64_t move_bb = 1ULL << pos;
+    uint64_t flipped = calc_flip(move_bb);
+    
+    player |= move_bb | flipped;
+    opponent &= ~flipped;
+    
+    // ✅ 交换player和opponent
+    std::swap(player, opponent);
+    
+    // 现在opponent是刚刚移动的玩家
+    // player是下一个要移动的玩家
+}
+```
+
+**设计理念：**
+- **Board类始终从当前玩家(player)的视角**
+- `player` bitboard = 下一个要移动的玩家
+- `opponent` bitboard = 上一个刚移动的玩家
+- 每次`make_move()`后自动切换视角
+
+**验证测试：**
+```cpp
+Board board;
+auto moves1 = board.legal_moves();  // White的4个合法移动
+
+board.make_move(19);  // White在d6落子
+auto moves2 = board.legal_moves();  // 现在应该是Black的合法移动
+
+assert(moves1.size() == 4);
+assert(moves2.size() == 3);  // 不是4！
+```
+
+**相关文件：**
+- `src/core/Board.cpp` - `make_move()` (lines 326-350)
+- `src/core/Board.hpp` - 设计说明
+
+**替代设计（未采用）：**
+```cpp
+// 方案B: 显式传入颜色
+void make_move(int pos, Color color);
+
+// 方案C: 分离的视角管理
+class Board {
+    uint64_t black, white;
+    Color current_player;
+};
+```
+
+**选择当前设计的原因：**
+- Bitboard算法只需要"己方"和"对手"概念
+- 避免if-else判断当前颜色
+- 算法更简洁，性能更好
+
+**经验教训：**
+- 设计数据结构时要明确"视角"概念
+- 状态变化后要维护不变量
+- 测试要验证连续多步的正确性
+
+---
+
 ## 🎯 总结与建议
 
 ### 核心原则
@@ -1026,9 +1275,9 @@ std::vector<Move> get_moves() const {
 
 ---
 
-**最后更新：** 2025年10月8日  
-**下次审查：** Week 1结束时  
-**问题总数：** 已记录19个问题，预期30+个
+**最后更新：** 2025年10月11日  
+**下次审查：** Week 2结束时  
+**问题总数：** 已记录22个问题（新增Week 1实际问题3个）
 
 ---
 

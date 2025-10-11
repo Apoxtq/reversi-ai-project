@@ -38,9 +38,9 @@ void demonstrateBitboard() {
             uint64_t mask = 1ULL << pos;
             
             if (player & mask) {
-                std::cout << "○ ";  // 玩家的棋子（白）
+                std::cout << "W ";  // 玩家的棋子（白 White）
             } else if (opponent & mask) {
-                std::cout << "● ";  // 对手的棋子（黑）
+                std::cout << "B ";  // 对手的棋子（黑 Black）
             } else {
                 std::cout << ". ";  // 空位
             }
