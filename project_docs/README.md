@@ -2,7 +2,7 @@
 
 > **Reversi AI - COMP390 Honours Year Project**  
 > 学生：田祺星 (Tianqixing) - 201821852  
-> 最后更新：2025年10月8日
+> 最后更新：2025年10月12日
 
 ---
 
@@ -33,10 +33,10 @@ project_docs/
 ### 1. 📋 [PROJECT_PLAN.md](PROJECT_PLAN.md) - 项目计划与进度
 
 **用途：** 项目的主要管理文档
-- ✅ 项目总体进度 (当前15%)
+- ✅ 项目总体进度 (当前20%)
 - ✅ 12周详细计划
 - ✅ 任务清单和里程碑
-- ✅ 时间追踪 (已用18h/预计285h)
+- ✅ 时间追踪 (已用29h/预计285h)
 - ✅ 学习进度和待办事项
 - ✅ 可交付成果检查清单
 
@@ -180,9 +180,9 @@ git push
 ### 📚 按场景
 
 **学习Bitboard：**
-- [PROJECT_PLAN.md](PROJECT_PLAN.md) → Week 1部分
-- [../docs/week1_bitboard_notes.md](../docs/week1_bitboard_notes.md)
-- Egaroucid源码: `bit.hpp`, `flip.hpp`
+- [PROJECT_PLAN.md](PROJECT_PLAN.md) → Week 1部分 ✅ 完成
+- [../docs/week1_bitboard_notes.md](../docs/week1_bitboard_notes.md) ✅ 完成
+- Egaroucid源码: `bit.hpp`, `flip.hpp` (已参考)
 
 **构建项目：**
 - [github/BUILD_AND_RUN.md](github/BUILD_AND_RUN.md)

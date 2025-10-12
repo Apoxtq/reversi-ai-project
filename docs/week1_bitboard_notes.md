@@ -3,7 +3,8 @@
 **COMP390 Honours Year Project**  
 **Student:** Tianqixing (201821852)  
 **Week:** 1 (Bitboard Learning Phase)  
-**Date:** October 2025
+**Date:** October 8-11, 2025  
+**Status:** ✅ **COMPLETED**
 
 ---
 
@@ -165,11 +166,12 @@ uint64_t legalMoves(uint64_t player, uint64_t opponent) {
 - [x] **Terminal state detection** ✨
 - [x] **Unit testing framework** ✨
 
-### 📅 To Do (Week 2)
-- [ ] Undo move functionality
-- [ ] Zobrist hashing for positions
-- [ ] Advanced move generation optimization
-- [ ] Performance benchmarking
+### 📅 To Do (Week 2) - 下一步计划
+- [ ] Undo move functionality (撤销移动)
+- [ ] Zobrist hashing for positions (Zobrist哈希)
+- [ ] Advanced move generation optimization (移动生成优化)
+- [ ] Performance benchmarking (性能基准测试)
+- [ ] Code refactoring and documentation (代码重构与文档)
 
 ---
 
@@ -483,9 +485,10 @@ if ((shifted_bb & player) != 0) return candidates;
 
 ---
 
-**Status:** Week 1 - ✅ COMPLETED  
+**Status:** Week 1 - ✅ **COMPLETED**  
 **Completion Date:** October 11, 2025  
-**Achievement:** 完整实现Bitboard基础系统，通过所有测试  
-**Next Phase:** Week 2 - Advanced Features & AI Foundation  
-**Last Updated:** October 11, 2025
+**Achievement:** 完整实现Bitboard基础系统，通过所有测试，性能超预期  
+**Test Results:** 5/5 tests passed, 11M ops/sec legal moves, 124K games/sec  
+**Next Phase:** Week 2 - Undo Move, Zobrist Hashing & Optimization  
+**Last Updated:** October 12, 2025
 
