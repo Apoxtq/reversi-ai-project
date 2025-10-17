@@ -177,8 +177,13 @@ cmake --build . --config Release
   - [x] 参考代码分析（Egaroucid, Rust Reversi）
   - [x] 完整测试套件（5个测试全部通过）
   - [x] 性能基准测试（超过所有目标）
-- [ ] Week 2: 移动执行优化（待开始）
-- [ ] Week 2: 撤销移动功能（待开始）
+- [x] **Week 2 完成** ✅ (2025-10-17)
+  - [x] 移动撤销系统（undo_move）
+  - [x] 哈希一致性测试（10,000局验证）
+  - [x] 完整测试套件（6个测试100%通过）
+  - [x] 性能微基准测试框架
+  - [x] count_player/opponent辅助方法
+  - [x] 性能优化（legal_moves: 19.6M ops/s）
 
 ### Phase 2: 核心实现（Week 3-6）
 - [x] Board类实现（Bitboard）✅ - Week 1 完成
@@ -314,27 +319,37 @@ cat QUICK_REFERENCE.md
 
 ## 🏆 项目状态
 
-**当前阶段**: Phase 1 - Week 1 完成！准备 Week 2  
+**当前阶段**: Phase 1 完成！准备 Phase 2 (Minimax引擎)  
 **开始日期**: 2025年10月8日  
 **预计完成**: 2025年12月31日  
-**进度**: ![](https://img.shields.io/badge/progress-20%25-orange) ✅
+**进度**: ![](https://img.shields.io/badge/progress-30%25-yellow) ✅
 
-### ✅ Week 1 完成情况（2025-10-11）
-- ✅ **Bitboard核心系统** (100%)
-  - [x] Board类 - 64位棋盘表示（385行核心代码）
-  - [x] 合法移动生成算法（8方向扫描）
-  - [x] 移动执行和棋子翻转（calc_flip + make_move）
-  - [x] 终局检测（双方无合法移动）
-  - [x] Zobrist哈希基础实现
-  - [x] 完整测试套件（5个测试 100%通过）
-  - [x] 性能基准测试（超过所有目标）
+### ✅ Phase 1 完成情况（Week 1-2，2025-10-17）
 
-### 📊 性能指标（Week 1 基准测试）
+**Week 1 - Bitboard核心系统** (100%) ✅
+- [x] Board类 - 64位棋盘表示（447行核心代码）
+- [x] 合法移动生成算法（Kogge-Stone并行算法）
+- [x] 移动执行和棋子翻转（calc_flip + make_move）
+- [x] 终局检测（双方无合法移动）
+- [x] Zobrist哈希增量更新系统
+- [x] 基础测试套件（3个测试通过）
+
+**Week 2 - 测试与优化** (100%) ✅
+- [x] 撤销移动系统（undo_move + 状态快照）
+- [x] count_player/opponent辅助方法
+- [x] 哈希一致性测试（test_hash.cpp）
+- [x] 撤销功能测试（test_undo.cpp）
+- [x] 性能微基准测试（bench_micro.cpp）
+- [x] 完整测试套件（6个测试 100%通过）
+- [x] 性能优化（legal_moves提升78%）
+
+### 📊 性能指标（Week 2 基准测试）
 ```
-✅ 合法移动生成: ~11M ops/sec  (目标: >10M) 
-✅ 移动执行:      ~11M ops/sec  (目标: >5M)
-✅ 哈希计算:      ~544M ops/sec (目标: >20M)
-✅ 游戏模拟:      ~124K games/s (目标: >5K)
+✅ 合法移动生成: 19.6M ops/s   (目标: 10M)   - 196% ⭐
+✅ 移动执行:      11.0M ops/s   (目标: 5M)    - 220%
+✅ 翻转计算:      15.8M ops/s   (目标: 8M)    - 198%
+✅ 游戏模拟:      124K games/s  (目标: 5K)    - 2480%
+✅ 哈希一致性:    100% (10,000局验证)
 ```
 
 ### 已完成
@@ -343,23 +358,29 @@ cat QUICK_REFERENCE.md
   - 3个测试程序（simple_test, test_legal_moves, benchmark）
   - 零警告编译通过
   - 完整的游戏规则文档（1694行）
+- ✅ **Week 2:** 测试套件与性能优化 (100%) 🎉
+  - 6个测试程序（新增: test_hash, test_undo, bench_micro）
+  - 撤销移动系统完整实现
+  - 哈希一致性100%验证（10,000局）
+  - 性能超目标96%-2380%
 
 ### ⏳ 进行中/待开始
-- 🎯 **Week 2:** 移动执行优化 + 撤销移动（下一步）
-- ⏳ **Week 3-4:** Minimax引擎 + Alpha-Beta剪枝
+- 🎯 **Week 3-4:** Minimax引擎 + Alpha-Beta剪枝（下一步）
 - ⏳ **Week 5-6:** 评估函数 + 置换表优化
 - ⏳ **Week 7-8:** SFML UI + 网络对战
 - ⏳ **Week 9-11:** MCTS引擎 + 性能对比
 - ⏳ **Week 12:** 最终测试与文档
 
 ### 🎯 关键成果
-- ✨ 完整的Bitboard系统（385行核心代码）
-- ✨ 高性能移动生成（11M ops/sec）
-- ✨ 完整测试覆盖（5个测试用例）
-- ✨ 详细的学习笔记和技术文档
+- ✨ 完整的Bitboard系统（447行核心代码）
+- ✨ 高性能移动生成（19.6M ops/sec，Week 2优化）
+- ✨ 完整测试覆盖（6个测试用例，100%通过）
+- ✨ 撤销移动系统（支持搜索树遍历）
+- ✨ 详细的学习笔记和技术文档（Week 1 + Week 2）
 - ✨ 可重复的性能基准测试框架
 
 ---
 
-**最后更新**: 2025年10月12日
+**最后更新**: 2025年10月17日  
+**最新完成**: Week 2 - 完整测试套件与性能优化 (6/6测试通过)
 

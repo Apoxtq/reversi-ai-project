@@ -489,6 +489,18 @@ if ((shifted_bb & player) != 0) return candidates;
 **Completion Date:** October 11, 2025  
 **Achievement:** 完整实现Bitboard基础系统，通过所有测试，性能超预期  
 **Test Results:** 5/5 tests passed, 11M ops/sec legal moves, 124K games/sec  
-**Next Phase:** Week 2 - Undo Move, Zobrist Hashing & Optimization  
-**Last Updated:** October 12, 2025
+**Next Phase:** ✅ Week 2 Complete! → [Week 2 Notes](week2_testing_optimization_notes.md)  
+**Last Updated:** October 17, 2025
+
+---
+
+## 📖 Continue to Week 2
+
+Week 1 established the foundation. **[Week 2 Notes](week2_testing_optimization_notes.md)** cover:
+- ✅ Comprehensive testing suite (hash consistency, undo functionality)
+- ✅ Performance optimization (19.6M ops/s legal moves, +78% improvement)
+- ✅ Move undo system for search tree traversal
+- ✅ Micro-benchmark framework for profiling
+
+**Status:** Week 1 & 2 both complete! Ready for Week 3 (Minimax Engine).
 
