@@ -2,7 +2,7 @@
 
 **项目：** Reversi AI - COMP390 Honours Project  
 **维护者：** Tianqixing (201821852)  
-**最后更新：** 2025年10月12日
+**最后更新：** 2025年10月16日
 
 ---
 
@@ -601,6 +601,47 @@ g++ -std=c++20 -O3 -march=native -DNDEBUG ...
 ```
 
 ---
+
+## ♟️ Week 2: Zobrist 哈希与撤销(undo)注意事项
+
+### 🔴 问题W2.1: 构造/拷贝后的哈希缓存不一致
+
+**现象：** `Board::copy()`、`Board(Board&&)` 或手动复制成员后，`hash_cache_` 未同步，导致 `hash()` 与参考重算不一致。
+
+**解决：** 统一通过 `recompute_hash(player, opponent)` 刷新缓存；所有构造函数、`copy(Board*)`、`pass()` 和 `make_move()/undo_move()` 路径均维护缓存一致性。
+
+**相关代码：** `src/core/Board.cpp` 中 `Board::Board() / Board(uint64_t,uint64_t) / copy(Board*) / pass()`。
+
+**验证：** `tests/test_hash.cpp` 随机走子与周期性 `undo_move` 下断言 `hash() == recompute_reference(b)`。
+
+### 🟡 问题W2.2: 撤销使用位置参数但顺序来源于历史
+
+**现象：** `undo_move(int pos)` 的参数未直接参与恢复逻辑，历史记录 `history_` 按栈顺序恢复完整状态（包含`hash_cache_`）。
+
+**建议：** 后续重构接口签名为 `undo_last()` 或使用无参；若需按位置撤销，需验证与历史匹配，避免误用。
+
+### 🟡 问题W2.3: 哈希更新策略的性能权衡
+
+**现状：** 当前 `make_move/pass` 使用 `recompute_hash` 重算，作为正确性基线。
+
+**优化方向：** 使用增量Zobrist：对落子位与翻转位执行异或，并在轮转（swap player/opponent）后不需额外处理，因为哈希表按视角定义（player/opponent）。需注意：
+- 翻转集合的遍历需要与bit提取一致；
+- `undo_move` 必须对称地恢复并异或回滚；
+- 单元测试需在随机对局+撤销路径上验证哈希不变量。
+
+### 📊 Week 2 微基准记录（基线）
+
+环境：Windows 10，GCC 13.2，Release `-O3 -march=native`。
+
+```
+legal_moves: 1.93677e+07 ops/sec
+make_move+undo: 9.42145e+06 ops/sec
+pass_pair: 2.60554e+07 ops/sec
+random_playout_steps: 5.3498e+06 ops/sec
+```
+
+解读：`pass_pair` 受哈希重算影响较小；`make_move+undo` 是后续增量Zobrist优化的主要受益对象。
+
 
 ### 🟡 问题5.2: 内存泄漏
 
@@ -1275,10 +1316,10 @@ class Board {
 
 ---
 
-**最后更新：** 2025年10月12日  
-**下次审查：** Week 2结束时  
+**最后更新：** 2025年10月16日  
+**下次审查：** Week 3开始时  
 **问题总数：** 已记录25个问题（包含Week 1实际遇到的3个问题）  
-**Week 1状态：** ✅ 所有问题已解决
+**Week 1-2状态：** ✅ Week 1完成，Week 2进行中
 
 ---
 

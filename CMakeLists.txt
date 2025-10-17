@@ -178,10 +178,15 @@ endif()
 if(GTEST_FOUND)
     enable_testing()
     
-    # Board 测试（待实现）
-    # add_executable(board_test tests/BoardTest.cpp)
-    # target_link_libraries(board_test PRIVATE reversi_core GTest::GTest GTest::Main)
-    # add_test(NAME BoardTest COMMAND board_test)
+    # Undo 基础测试（简单断言版）
+    add_executable(test_undo tests/test_undo.cpp)
+    target_link_libraries(test_undo PRIVATE reversi_core)
+    add_test(NAME UndoBasicTest COMMAND test_undo)
+
+    # Hash 一致性测试（简单断言版）
+    add_executable(test_hash tests/test_hash.cpp)
+    target_link_libraries(test_hash PRIVATE reversi_core)
+    add_test(NAME HashConsistencyTest COMMAND test_hash)
     
     # Minimax 测试（待实现）
     # add_executable(minimax_test tests/MinimaxTest.cpp)
@@ -196,9 +201,9 @@ endif()
 
 # ==================== Benchmark ====================
 
-# Benchmark 程序（待实现）
-# add_executable(reversi_benchmark src/benchmark.cpp)
-# target_link_libraries(reversi_benchmark PRIVATE reversi_core reversi_ai)
+# Micro benchmark for core operations (Week 2)
+add_executable(bench_micro tests/bench_micro.cpp)
+target_link_libraries(bench_micro PRIVATE reversi_core)
 
 # ==================== 安装配置 ====================
 

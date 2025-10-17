@@ -79,11 +79,13 @@ void Board::init_zobrist() {
 Board::Board() 
     : player(INITIAL_PLAYER), opponent(INITIAL_OPPONENT) {
     init_zobrist();
+    hash_cache_ = recompute_hash(player, opponent);
 }
 
 Board::Board(uint64_t p, uint64_t o) 
     : player(p), opponent(o) {
     init_zobrist();
+    hash_cache_ = recompute_hash(player, opponent);
 }
 
 Board::Board(const std::string& board_str) {
@@ -92,6 +94,7 @@ Board::Board(const std::string& board_str) {
     player = INITIAL_PLAYER;
     opponent = INITIAL_OPPONENT;
     init_zobrist();
+    hash_cache_ = recompute_hash(player, opponent);
 }
 
 // ==================== Copy Operations ====================
@@ -103,6 +106,7 @@ Board Board::copy() const {
 void Board::copy(Board* dest) const {
     dest->player = player;
     dest->opponent = opponent;
+    dest->hash_cache_ = recompute_hash(dest->player, dest->opponent);
 }
 
 // ==================== Board State Queries ====================
@@ -168,23 +172,21 @@ void Board::print() const {
 }
 
 uint64_t Board::hash() const {
-    // Zobrist hashing: XOR hash values for all pieces
+    return hash_cache_;
+}
+
+uint64_t Board::recompute_hash(uint64_t p, uint64_t o) {
     uint64_t h = 0;
-    
-    uint64_t p = player;
     while (p) {
         int pos = std::countr_zero(p);
         h ^= zobrist_player[pos];
-        p &= p - 1; // Clear lowest bit
+        p &= p - 1;
     }
-    
-    uint64_t o = opponent;
     while (o) {
         int pos = std::countr_zero(o);
         h ^= zobrist_opponent[pos];
         o &= o - 1;
     }
-    
     return h;
 }
 
@@ -354,30 +356,42 @@ void Board::make_move(int pos) {
      */
     
     if (pos < 0 || pos >= 64) return;
-    
+
     uint64_t pos_mask = 1ULL << pos;
     uint64_t flipped = calc_flip(pos);
-    
+
     // If no pieces flipped, invalid move
     if (flipped == 0) return;
-    
-    // Place our piece and flip opponents (branchless operations)
+
+    // Record previous state for undo
+    history_.push_back(MoveRecord{player, opponent, hash_cache_, pos});
+
+    // Place our piece and flip opponents
     player |= pos_mask | flipped;
     opponent &= ~flipped;
-    
+
     // Swap player and opponent for next turn
     std::swap(player, opponent);
+
+    // Update hash cache by recomputation (safe baseline; can be optimized later)
+    hash_cache_ = recompute_hash(player, opponent);
 }
 
 void Board::undo_move(int pos) {
-    // TODO: Implement move undo with history stack (Week 3)
-    // Will require storing: previous board state, move position, flipped pieces
-    (void)pos;  // Suppress unused parameter warning until implemented
+    // Undo to the previous saved state
+    (void)pos;  // Position is currently unused; we rely on history ordering
+    if (history_.empty()) return;
+    const MoveRecord rec = history_.back();
+    player = rec.prev_player;
+    opponent = rec.prev_opponent;
+    hash_cache_ = rec.prev_hash;
+    history_.pop_back();
 }
 
 void Board::pass() {
     // Swap player and opponent
     std::swap(player, opponent);
+    hash_cache_ = recompute_hash(player, opponent);
 }
 
 } // namespace core

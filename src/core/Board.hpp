@@ -30,6 +30,12 @@ class Board {
 public:
     uint64_t player;    ///< Bitboard for current player's pieces
     uint64_t opponent;  ///< Bitboard for opponent's pieces
+    
+    /**
+     * @brief Cached Zobrist hash of current state (player/opponent orientation)
+     * Maintained by make_move/undo_move/pass and constructors.
+     */
+    uint64_t hash_cache_ = 0;
 
     // Zobrist hashing tables (initialized once)
     static uint64_t zobrist_player[64];
@@ -142,6 +148,9 @@ private:
     /** @brief Initialize Zobrist hashing tables (called once) */
     static void init_zobrist();
     
+    /** @brief Recompute Zobrist hash from given bitboards (utility) */
+    static uint64_t recompute_hash(uint64_t p, uint64_t o);
+    
     /** @brief Shift bitboard in given direction with edge masking
      *  @param bb Bitboard to shift
      *  @param dir Direction constant
@@ -165,6 +174,15 @@ private:
      *  @return Bitboard of flipped pieces in this direction
      */
     static uint64_t calc_flips_direction(int pos, uint64_t player_bb, uint64_t opponent_bb, int dir);
+
+    // ==================== Move History (for undo) ====================
+    struct MoveRecord {
+        uint64_t prev_player;
+        uint64_t prev_opponent;
+        uint64_t prev_hash;
+        int pos;
+    };
+    std::vector<MoveRecord> history_;
 };
 
 } // namespace core
