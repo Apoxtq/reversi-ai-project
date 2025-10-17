@@ -10,19 +10,19 @@
 
 ### 编译和运行
 
-最简单的方式（推荐用于测试）：
+**方式 1: 快速编译**（推荐用于测试）
 ```bash
 quick_compile.bat
 ```
 
-或使用CMake（推荐用于开发）：
+**方式 2: CMake编译**（推荐用于开发）
 ```bash
 cmake -B build -G "MinGW Makefiles"
 cmake --build build
 .\build\bin\reversi_ai.exe
 ```
 
-详细说明请查看 [BUILD_AND_RUN.md](BUILD_AND_RUN.md)
+> 💡 **提示**: 如遇到编译问题，请参考 [技术问题手册](project_docs/TECHNICAL_ISSUES_SOLUTIONS.md)（本地文档）
 
 ### 系统要求
 
@@ -236,10 +236,15 @@ cmake --build . --config Release
 
 ## 📖 文档
 
-- [项目提案](docs/CA1_Detailed_Proposal.md)
-- [Week 1 学习笔记](docs/notes/Bitboard_Day1.md)
-- [架构设计](docs/Architecture_Design.md)（待完成）
-- [性能测试报告](docs/Performance_Report.md)（待完成）
+### 学习笔记
+- [Week 1 学习笔记 - Bitboard核心系统](docs/week1_bitboard_notes.md) ✅ (495行)
+- [Week 2 学习笔记 - 测试与优化](docs/week2_testing_optimization_notes.md) ✅ (438行)
+- [Day 1 初始笔记](docs/notes/Bitboard_Day1.md)
+
+### 项目文档
+- [黑白棋规则详解](REVERSI_RULES.md) (1694行完整规则说明)
+- 技术问题手册 (本地: `project_docs/TECHNICAL_ISSUES_SOLUTIONS.md`)
+- 项目计划 (本地: `project_docs/PROJECT_PLAN.md`)
 
 ---
 
@@ -252,53 +257,6 @@ cmake --build . --config Release
 3. **[AlphaZero_Gomoku](https://github.com/junxiaosong/AlphaZero_Gomoku)** - MCTS教学实现
 4. **[reversi (Rust)](https://github.com/edre/nokamute)** - Minimax参考实现
 5. **[SFML](https://www.sfml-dev.org/)** - 图形和网络库
-
----
-
-## 📚 文档导航
-
-### 🚀 新手入门（从这里开始）
-1. **[快速参考](QUICK_REFERENCE.md)** ⭐ - 最常用命令和概念（5分钟）
-2. **[入门指南](GETTING_STARTED.md)** - 详细的环境设置和开发指南（15分钟）
-3. **[构建说明](BUILD_AND_RUN.md)** - 编译、运行和故障排除（10分钟）
-
-### 📋 项目文档
-4. **[项目结构](PROJECT_SETUP_SUMMARY.md)** - 完整的架构和模块说明
-5. **[技术问题手册](project_docs/TECHNICAL_ISSUES_SOLUTIONS.md)** - 问题解决方案汇总
-6. **[文档索引](project_docs/DOCUMENTATION_INDEX.md)** - 完整文档导航系统
-
-### 🔬 技术文档
-7. **[Week 1笔记](docs/week1_bitboard_notes.md)** - Bitboard学习笔记
-8. **[AI策略接口](src/ai/AIStrategy.hpp)** - AI算法接口文档
-
-### ⚡ 快速开始
-```bash
-# 1. 克隆项目（如果从GitHub）
-git clone [repo_url]
-
-# 2. 编译并运行（最快方式）
-quick_compile.bat
-
-# 3. 查看更多帮助
-cat QUICK_REFERENCE.md
-```
-
-### 📂 文档组织
-```
-📁 根目录/           → GitHub公开文档（给其他人看）
-   ├── README.md
-   ├── GETTING_STARTED.md
-   └── ...
-   
-📁 project_docs/     → 本地项目文档（不上传GitHub）
-   ├── DOCUMENTATION_INDEX.md
-   ├── TECHNICAL_ISSUES_SOLUTIONS.md
-   ├── PROJECT_STATUS.md
-   └── ...
-   
-📁 docs/             → 技术文档和学习笔记
-   └── week*_notes.md
-```
 
 ---
 
