@@ -54,11 +54,11 @@ set(CORE_SOURCES
 
 # AI 引擎源文件
 set(AI_SOURCES
-    # Minimax 引擎（待实现）
-    # src/ai/MinimaxEngine.cpp
-    # src/ai/MCTSEngine.cpp
-    # src/ai/Evaluator.cpp
-    # src/ai/TranspositionTable.cpp
+    # Week 3: Minimax engine with evaluation
+    src/ai/Evaluator.cpp
+    src/ai/MinimaxEngine.cpp
+    # src/ai/MCTSEngine.cpp         # Week 9
+    # src/ai/TranspositionTable.cpp # Week 6
 )
 
 # UI 源文件
@@ -96,12 +96,12 @@ endif()
 
 # AI 引擎库
 if(AI_SOURCES)
-    add_library(reversi_ai STATIC ${AI_SOURCES})
-    target_include_directories(reversi_ai PUBLIC 
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/ai
+    add_library(reversi_ai_lib STATIC ${AI_SOURCES})
+    target_include_directories(reversi_ai_lib PUBLIC 
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
     )
     if(TARGET reversi_core)
-        target_link_libraries(reversi_ai PUBLIC reversi_core)
+        target_link_libraries(reversi_ai_lib PUBLIC reversi_core)
     endif()
 endif()
 
@@ -156,8 +156,8 @@ add_executable(reversi_ai src/main.cpp)
 if(TARGET reversi_core)
     target_link_libraries(reversi_ai PRIVATE reversi_core)
 endif()
-if(TARGET reversi_ai)  # Fixed: was reversi_ai_lib
-    # AI library will be linked when it exists
+if(TARGET reversi_ai_lib)
+    target_link_libraries(reversi_ai PRIVATE reversi_ai_lib)
 endif()
 if(TARGET reversi_ui)
     target_link_libraries(reversi_ai PRIVATE reversi_ui)
@@ -175,29 +175,31 @@ endif()
 
 # ==================== 测试 ====================
 
-if(GTEST_FOUND)
-    enable_testing()
-    
-    # Undo 基础测试（简单断言版）
-    add_executable(test_undo tests/test_undo.cpp)
-    target_link_libraries(test_undo PRIVATE reversi_core)
-    add_test(NAME UndoBasicTest COMMAND test_undo)
+# ==================== 测试（无需Google Test）====================
+enable_testing()
 
-    # Hash 一致性测试（简单断言版）
-    add_executable(test_hash tests/test_hash.cpp)
-    target_link_libraries(test_hash PRIVATE reversi_core)
-    add_test(NAME HashConsistencyTest COMMAND test_hash)
-    
-    # Minimax 测试（待实现）
-    # add_executable(minimax_test tests/MinimaxTest.cpp)
-    # target_link_libraries(minimax_test PRIVATE reversi_ai GTest::GTest GTest::Main)
-    # add_test(NAME MinimaxTest COMMAND minimax_test)
-    
-    # MCTS 测试（待实现）
-    # add_executable(mcts_test tests/MCTSTest.cpp)
-    # target_link_libraries(mcts_test PRIVATE reversi_ai GTest::GTest GTest::Main)
-    # add_test(NAME MCTSTest COMMAND mcts_test)
+# Week 2 tests
+add_executable(test_undo tests/test_undo.cpp)
+target_link_libraries(test_undo PRIVATE reversi_core)
+add_test(NAME UndoBasicTest COMMAND test_undo)
+
+add_executable(test_hash tests/test_hash.cpp)
+target_link_libraries(test_hash PRIVATE reversi_core)
+add_test(NAME HashConsistencyTest COMMAND test_hash)
+
+# Week 3 tests - Minimax engine
+if(TARGET reversi_ai_lib)
+    add_executable(test_minimax tests/test_minimax.cpp)
+    target_link_libraries(test_minimax PRIVATE reversi_core reversi_ai_lib)
+    target_include_directories(test_minimax PRIVATE 
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests
+    )
+    add_test(NAME MinimaxTest COMMAND test_minimax)
 endif()
+
+# MCTS tests (Week 9)
+# add_executable(test_mcts tests/test_mcts.cpp)
 
 # ==================== Benchmark ====================
 
