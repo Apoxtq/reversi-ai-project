@@ -223,37 +223,45 @@
 
 ---
 
-### Week 4: 高级评估函数 (10/23-10/29) ⏳ **待开始**
+### Week 4: 高级评估函数 (11/3-11/10) 🔄 **进行中**
 
-**说明：** Week 3已实现基础评估函数（位置权重+行动力+角控制），Week 4将专注于高级特性。
+**说明：** Week 3已实现基础评估函数（位置权重+行动力+角控制），Week 4实现高级特性。
 
 **核心任务：**
-- [ ] **稳定性分析** (Stability Analysis) ✨ 核心功能
-  - [ ] 计算稳定棋子（Corner stability, Edge stability）
-  - [ ] 半稳定棋子评估
-  - [ ] 边缘棋子惩罚（Frontier discs）
-- [ ] **阶段化评估策略**
-  - [ ] 开局阶段评估（0-20子）- 重视行动力
-  - [ ] 中局阶段评估（21-50子）- 平衡策略
-  - [ ] 残局阶段评估（51-64子）- 重视材料优势
-- [ ] **参数调优框架**
-  - [ ] 自对弈测试系统
-  - [ ] 权重参数实验
-  - [ ] 统计分析工具
-- [ ] **Week 4专属文档**
-  - [ ] `docs/week4_advanced_evaluation_notes.md`
-  - [ ] 稳定性理论研究
-  - [ ] 实验数据分析
+- [x] **稳定性分析框架** (StabilityAnalyzer) ✨ 已完成
+  - [x] 角稳定性检测 (Corner stability)
+  - [x] 边缘稳定性传播 (Edge stability)
+  - [x] 前沿棋子计算 (Frontier discs)
+  - [x] 完整稳定性分析系统
+- [x] **阶段化权重系统** (PhaseWeights) ✨ 已完成
+  - [x] 游戏阶段检测 (Opening/Midgame/Endgame/Final)
+  - [x] 动态权重配置
+  - [x] 平滑权重过渡
+- [x] **增强型评估器** (Evaluator_Week4) ✨ 已完成
+  - [x] 集成稳定性分析
+  - [x] 阶段化评估策略
+  - [x] 潜在行动力 (Potential mobility)
+  - [x] 角控制加成优化
+- [x] **自对弈测试系统** 🔧 已完成
+  - [x] AI vs AI对战框架 (self_play.cpp)
+  - [x] 统计数据收集
+  - [x] Win rate分析工具
+- [ ] **性能优化** ⏳ 待完成
+  - [ ] 稳定性计算优化
+  - [ ] 评估函数性能测试
+  - [ ] 目标: >30M evals/sec
 
-**交付成果：**
-- 完整的稳定性分析系统
-- 阶段化评估策略实现
-- 参数调优实验报告
-- Week 4学习笔记
+**已完成交付成果：**
+- ✅ StabilityAnalyzer.hpp/cpp (~200行)
+- ✅ PhaseWeights.hpp (~174行)
+- ✅ Evaluator_Week4.hpp/cpp (~264行)
+- ✅ self_play.cpp (~268行)
+- ✅ test_stability.cpp (~420行)
+- ✅ 编译脚本 (build_week4.bat/ps1)
 
-**时间：** ~20-25小时
+**时间：** ~15小时已用 / ~25小时计划
 
-**注：** 此任务将在后续与AI合作完成
+**进度：** Day 1-5 完成 (60%), Day 6-7 待完成 (性能优化+文档)
 
 ---
 

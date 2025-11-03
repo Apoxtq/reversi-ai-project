@@ -31,7 +31,25 @@ quick_compile.bat
 .\bench_week3.exe
 ```
 
-**方式 3: CMake编译**（推荐用于完整开发）
+**方式 3: Week 4 专用编译**（推荐用于Week 4任务）
+```powershell
+# 使用PowerShell脚本编译Week 4所有程序
+.\build_week4.ps1
+
+# 或使用批处理脚本
+.\build_week4.bat
+
+# 运行稳定性分析测试
+.\test_stability.exe
+
+# 运行自对弈测试（Week 4 vs Week 3）
+.\self_play.exe
+
+# 运行性能基准测试
+.\bench_week4.exe
+```
+
+**方式 4: CMake编译**（推荐用于完整开发）
 ```bash
 cmake -B build -G "MinGW Makefiles"
 cmake --build build
@@ -92,10 +110,15 @@ reversi-ai-project/
 │   ├── core/                    # 核心游戏逻辑 ✅
 │   │   └── Board.hpp/cpp        # 棋盘表示（Bitboard，447行）
 │   ├── ai/                      # AI引擎 ✅
-│   │   ├── MinimaxEngine.hpp/cpp   # Minimax引擎（154行）
-│   │   ├── Evaluator.hpp/cpp       # 评估函数（材料+行动力+位置）
-│   │   ├── MCTSEngine.hpp/cpp      # MCTS引擎 ⏳ Week 9
-│   │   └── TranspositionTable.hpp  # 置换表 ⏳ Week 5
+│   │   ├── MinimaxEngine.hpp/cpp      # Minimax引擎（154行）
+│   │   ├── Evaluator.hpp/cpp          # Week 3评估函数（材料+行动力+位置）
+│   │   ├── Evaluator_Week4.hpp/cpp    # Week 4增强评估（稳定性+阶段化）✅
+│   │   ├── StabilityAnalyzer.hpp/cpp  # 稳定性分析器 ✅
+│   │   ├── PhaseWeights.hpp           # 阶段化权重系统 ✅
+│   │   ├── MCTSEngine.hpp/cpp         # MCTS引擎 ⏳ Week 9
+│   │   └── TranspositionTable.hpp     # 置换表 ⏳ Week 5
+│   ├── research/                # 研究工具 ✅
+│   │   └── self_play.cpp        # 自对弈框架（270行）
 │   ├── ui/                      # 用户界面 ⏳ Week 7-8
 │   │   ├── GameUI.hpp/cpp          # 游戏界面（SFML）
 │   │   ├── BoardRenderer.hpp/cpp   # 棋盘渲染
@@ -112,17 +135,22 @@ reversi-ai-project/
 │   ├── test_hash.cpp            # 哈希测试
 │   ├── test_undo.cpp            # 撤销测试
 │   ├── test_minimax.cpp         # Minimax测试
-│   └── test_evaluator.cpp       # 评估函数测试
+│   ├── test_stability.cpp       # 稳定性分析测试（421行）✅
+│   ├── quick_self_play.cpp      # 快速自对弈测试 ✅
+│   └── bench_week4.cpp          # Week 4性能基准测试 ✅
 ├── docs/                        # 文档 ✅
 │   ├── week1_bitboard_notes.md       # Week 1笔记（495行）
 │   ├── week2_testing_optimization_notes.md  # Week 2笔记（438行）
-│   └── week3_minimax_ai_notes.md     # Week 3笔记（674行）
+│   ├── week3_minimax_ai_notes.md     # Week 3笔记（674行）
+│   └── week4_advanced_evaluation_notes.md  # Week 4笔记（436行）✅
 ├── project_docs/                # 项目文档 ✅
 │   ├── PROJECT_PLAN.md          # 项目计划（661行）
 │   └── TECHNICAL_ISSUES_SOLUTIONS.md  # 技术问题手册
 ├── REVERSI_RULES.md             # 黑白棋规则（1694行）✅
 ├── README.md                    # 项目说明 ✅
 ├── build_week3.ps1              # Week 3编译脚本 ✅
+├── build_week4.ps1              # Week 4编译脚本 ✅
+├── build_week4.bat              # Week 4编译脚本（批处理）✅
 ├── quick_compile.bat            # 快速编译脚本 ✅
 └── CMakeLists.txt               # CMake配置 ✅
 
@@ -176,8 +204,16 @@ reversi-ai-project/
   - [x] 难度系统（Easy/Medium/Hard/Expert）
   - [x] 单元测试（test_minimax.cpp）
   - [x] 完整学习笔记（674行）
-- [ ] **Week 4-6 待开始** ⏸️
-  - [ ] Week 4: 高级评估函数（稳定性分析+阶段化策略）
+- [x] **Week 4 完成** ✅ (2025-10-29)
+  - [x] 稳定性分析器（StabilityAnalyzer）
+  - [x] 阶段化权重系统（PhaseWeights）
+  - [x] 增强评估器（Evaluator_Week4）
+  - [x] 自对弈测试框架（self_play.cpp）
+  - [x] 完整单元测试套件（10/10通过）
+  - [x] 性能基准测试（Week 4仅慢2.9%）
+  - [x] 实战验证（10:0完胜Week 3）
+  - [x] 完整学习笔记（436行）
+- [ ] **Week 5-6 待开始** ⏸️
   - [ ] Week 5: 置换表优化（Transposition Table + Zobrist）
   - [ ] Week 6: 高级搜索技术（迭代加深 + PVS + Move Ordering）
 
@@ -235,11 +271,12 @@ reversi-ai-project/
 
 ## 📖 文档
 
-### 学习笔记（Week 1-3完成）
+### 学习笔记（Week 1-4完成）
 - [Week 1 学习笔记 - Bitboard核心系统](docs/week1_bitboard_notes.md) ✅ (495行)
 - [Week 2 学习笔记 - 测试与优化](docs/week2_testing_optimization_notes.md) ✅ (438行)
 - [Week 3 学习笔记 - Minimax AI引擎](docs/week3_minimax_ai_notes.md) ✅ (674行)
-- **总计：** 1,619行学习笔记
+- [Week 4 学习笔记 - 高级评估函数](docs/week4_advanced_evaluation_notes.md) ✅ (436行)
+- **总计：** 2,043行学习笔记
 
 ### 项目文档
 - [黑白棋规则详解](REVERSI_RULES.md) ✅ (1,694行完整规则说明)

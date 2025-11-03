@@ -1,4 +1,4 @@
-# 快速参考指南
+bu'shiss# 快速参考指南
 
 ## Reversi AI Project - Quick Reference Card
 
