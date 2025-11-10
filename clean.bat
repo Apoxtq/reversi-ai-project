@@ -1,4 +1,7 @@
 @echo off
+REM Set code page to UTF-8 for proper character display
+chcp 65001 >nul 2>&1
+
 REM Clean script for Reversi AI Project
 REM Removes all build artifacts and temporary files
 

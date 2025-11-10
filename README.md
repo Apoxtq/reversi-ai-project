@@ -319,10 +319,10 @@ reversi-ai-project/
 
 ## 🏆 项目状态
 
-**当前阶段**: Phase 1 (Week 1-3) 完成！准备高级优化 (Week 4-6)  
+**当前阶段**: Phase 1 (Week 1-4) 完成！Week 5 置换表优化进行中  
 **开始日期**: 2025年10月8日  
 **预计完成**: 2025年12月31日  
-**进度**: ![](https://img.shields.io/badge/progress-35%25-yellow) ✅
+**进度**: ![](https://img.shields.io/badge/progress-40%25-yellow) ✅
 
 ### ✅ 已完成里程碑（Week 1-3，2025-10-22）
 
@@ -374,10 +374,17 @@ reversi-ai-project/
 ✅ 难度级别:          4个（深度1/3/5/7+）
 ```
 
+### 🔄 进行中任务
+
+- 🔄 **Week 5:** 置换表优化（Transposition Table）✨ 核心功能已完成
+  - ✅ TranspositionTable 类实现
+  - ✅ MinimaxEngine 集成
+  - ✅ Move Ordering 优化
+  - ⏳ 性能基准测试（待完成）
+
 ### ⏳ 待开始任务
 
-- ⏸️ **Week 4:** 高级评估函数（稳定性分析+阶段化策略）
-- ⏳ **Week 5:** 置换表优化（Transposition Table）
+- ⏸️ **Week 4:** 高级评估函数（性能优化+实验验证）
 - ⏳ **Week 6:** 高级搜索技术（迭代加深+PVS）
 - ⏳ **Week 7-8:** SFML UI + 网络对战
 - ⏳ **Week 9-11:** MCTS引擎 + 性能对比

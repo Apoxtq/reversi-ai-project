@@ -57,8 +57,9 @@ set(AI_SOURCES
     # Week 3: Minimax engine with evaluation
     src/ai/Evaluator.cpp
     src/ai/MinimaxEngine.cpp
+    # Week 5: Transposition table
+    src/ai/TranspositionTable.cpp
     # src/ai/MCTSEngine.cpp         # Week 9
-    # src/ai/TranspositionTable.cpp # Week 6
 )
 
 # UI 源文件
@@ -196,6 +197,15 @@ if(TARGET reversi_ai_lib)
         ${CMAKE_CURRENT_SOURCE_DIR}/tests
     )
     add_test(NAME MinimaxTest COMMAND test_minimax)
+    
+    # Week 5 tests - Transposition table
+    add_executable(test_transposition tests/test_transposition.cpp)
+    target_link_libraries(test_transposition PRIVATE reversi_core reversi_ai_lib)
+    target_include_directories(test_transposition PRIVATE 
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests
+    )
+    add_test(NAME TranspositionTest COMMAND test_transposition)
 endif()
 
 # MCTS tests (Week 9)

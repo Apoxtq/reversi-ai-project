@@ -1,4 +1,7 @@
 @echo off
+REM Set code page to UTF-8 for proper character display
+chcp 65001 >nul 2>&1
+
 REM Compile all test programs
 REM Usage: cd to project root and run "tests\compile_tests.bat"
 
@@ -8,17 +11,17 @@ echo ===============================================
 echo.
 
 REM Compile simple_test
-echo [1/2] Compiling simple_test...
+echo [1/3] Compiling simple_test...
 g++ -std=c++20 -O2 -I./src -o tests/simple_test.exe ^
     src/core/Board.cpp ^
     src/core/Move.cpp ^
     tests/simple_test.cpp
 
 if %ERRORLEVEL% NEQ 0 (
-    echo ERROR: simple_test compilation failed!
+    echo [ERROR] simple_test compilation failed!
     exit /b 1
 )
-echo ✓ simple_test.exe created
+echo [OK] simple_test.exe created
 
 echo.
 
@@ -30,10 +33,10 @@ g++ -std=c++20 -O2 -I./src -o tests/test_legal_moves.exe ^
     tests/test_legal_moves.cpp
 
 if %ERRORLEVEL% NEQ 0 (
-    echo ERROR: test_legal_moves compilation failed!
+    echo [ERROR] test_legal_moves compilation failed!
     exit /b 1
 )
-echo ✓ test_legal_moves.exe created
+echo [OK] test_legal_moves.exe created
 
 echo.
 
@@ -45,14 +48,14 @@ g++ -std=c++20 -O3 -march=native -I./src -o tests/benchmark.exe ^
     tests/benchmark.cpp
 
 if %ERRORLEVEL% NEQ 0 (
-    echo ERROR: benchmark compilation failed!
+    echo [ERROR] benchmark compilation failed!
     exit /b 1
 )
-echo ✓ benchmark.exe created
+echo [OK] benchmark.exe created
 
 echo.
 echo ===============================================
-echo All tests compiled successfully!
+echo [SUCCESS] All tests compiled successfully!
 echo ===============================================
 echo.
 echo Run tests:

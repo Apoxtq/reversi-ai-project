@@ -1,4 +1,7 @@
 @echo off
+REM Set code page to UTF-8 for proper character display
+chcp 65001 >nul 2>&1
+
 REM Quick compile script for testing (without CMake)
 REM COMP390 Honours Year Project (2025-26)
 
@@ -30,18 +33,24 @@ g++ -std=c++20 -o reversi_ai.exe ^
     build_temp/Benchmark.o ^
     build_temp/main.o
 
-if %ERRORLEVEL% EQU 0 (
+if %ERRORLEVEL% NEQ 0 (
     echo.
-    echo [SUCCESS] Build completed!
-    echo Executable: reversi_ai.exe
-    echo.
-    echo Running program...
-    echo.
-    reversi_ai.exe
-) else (
     echo [ERROR] Linking failed!
     pause
     exit /b 1
+)
+
+echo.
+echo [SUCCESS] Build completed!
+echo Executable: reversi_ai.exe
+echo.
+echo Running program...
+echo.
+reversi_ai.exe
+
+if %ERRORLEVEL% NEQ 0 (
+    echo.
+    echo [WARNING] Program exited with error code: %ERRORLEVEL%
 )
 
 pause

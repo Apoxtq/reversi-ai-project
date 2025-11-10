@@ -6,6 +6,7 @@
 #include "ai/MinimaxEngine.hpp"
 #include <iostream>
 #include <iomanip>
+#include <algorithm>
 
 namespace reversi::ai {
 
@@ -13,9 +14,10 @@ namespace reversi::ai {
 constexpr int INF = std::numeric_limits<int>::max() / 2;
 
 // Constructor implementations
-MinimaxEngine::MinimaxEngine() : config_() {}
+MinimaxEngine::MinimaxEngine() : config_(), tt_(config_.tt_size_bits) {}
 
-MinimaxEngine::MinimaxEngine(const Config& config) : config_(config) {}
+MinimaxEngine::MinimaxEngine(const Config& config) 
+    : config_(config), tt_(config.tt_size_bits) {}
 
 void MinimaxEngine::SearchResult::print() const {
     std::cout << "Search Result:\n";
@@ -34,6 +36,11 @@ MinimaxEngine::SearchResult MinimaxEngine::find_best_move(
     using Clock = std::chrono::high_resolution_clock;
     auto start = Clock::now();
     nodes_searched_ = 0;
+    
+    // Reset TT statistics for this search (if enabled)
+    if (config_.use_transposition) {
+        tt_.reset_stats();
+    }
     
     const auto moves = board.get_legal_moves();
     
@@ -98,6 +105,36 @@ int MinimaxEngine::negamax(
 {
     ++nodes_searched_;
     
+    // Query transposition table (if enabled)
+    if (config_.use_transposition) {
+        uint64_t hash = board.hash();
+        TTEntry* entry = tt_.probe(hash);
+        
+        if (entry && entry->depth >= depth) {
+            // Found cached entry with sufficient depth
+            int score = entry->score;
+            
+            // Adjust score for current depth (if needed)
+            // Note: In practice, we store scores relative to current position
+            
+            // Use cached result based on entry type
+            // TTFlag values: EXACT=0, LOWER_BOUND=1, UPPER_BOUND=2
+            if (entry->flag == 0) {  // EXACT
+                return score;
+            } else if (entry->flag == 1) {  // LOWER_BOUND
+                // Beta cutoff: score >= beta
+                if (score >= beta) {
+                    return score;
+                }
+            } else if (entry->flag == 2) {  // UPPER_BOUND
+                // Alpha cutoff: score <= alpha
+                if (score <= alpha) {
+                    return score;
+                }
+            }
+        }
+    }
+    
     // Leaf node: evaluate position
     if (depth == 0) {
         return Evaluator::evaluate(board);
@@ -122,10 +159,26 @@ int MinimaxEngine::negamax(
         return -negamax(next, depth - 1, -beta, -alpha);
     }
     
+    // Move ordering: prioritize transposition table best move
+    std::vector<int> ordered_moves = moves;
+    if (config_.use_transposition) {
+        uint64_t hash = board.hash();
+        TTEntry* entry = tt_.probe(hash);
+        if (entry && entry->best_move >= 0) {
+            // Move TT best move to front
+            auto it = std::find(ordered_moves.begin(), ordered_moves.end(), entry->best_move);
+            if (it != ordered_moves.end()) {
+                std::swap(ordered_moves[0], *it);
+            }
+        }
+    }
+    
     // Negamax recursion
     int best_score = -INF;
+    int best_move = ordered_moves[0];
+    int original_alpha = alpha;
     
-    for (int move : moves) {
+    for (int move : ordered_moves) {
         // Make move
         reversi::core::Board next = board;
         next.make_move(move);
@@ -133,8 +186,11 @@ int MinimaxEngine::negamax(
         // Recursive search (opponent's turn, negate score)
         int score = -negamax(next, depth - 1, -beta, -alpha);
         
-        // Update best score
-        best_score = std::max(best_score, score);
+        // Update best score and move
+        if (score > best_score) {
+            best_score = score;
+            best_move = move;
+        }
         
         // Alpha-Beta pruning
         if (config_.use_alpha_beta) {
@@ -144,6 +200,28 @@ int MinimaxEngine::negamax(
                 break;
             }
         }
+    }
+    
+    // Store result in transposition table (if enabled)
+    if (config_.use_transposition) {
+        uint64_t hash = board.hash();
+        TTEntry new_entry;
+        new_entry.hash = hash;
+        new_entry.score = best_score;
+        new_entry.depth = depth;
+        new_entry.best_move = best_move;
+        
+        // Determine entry type based on alpha-beta bounds
+        // TTFlag values: EXACT=0, LOWER_BOUND=1, UPPER_BOUND=2
+        if (best_score <= original_alpha) {
+            new_entry.flag = 2;  // UPPER_BOUND
+        } else if (best_score >= beta) {
+            new_entry.flag = 1;  // LOWER_BOUND
+        } else {
+            new_entry.flag = 0;  // EXACT
+        }
+        
+        tt_.store(new_entry);
     }
     
     return best_score;

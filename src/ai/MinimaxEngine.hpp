@@ -15,6 +15,7 @@
 
 #include "core/Board.hpp"
 #include "ai/Evaluator.hpp"
+#include "ai/TranspositionTable.hpp"
 #include <limits>
 #include <chrono>
 #include <cstdint>
@@ -37,10 +38,12 @@ public:
     struct Config {
         int max_depth = 6;           ///< Maximum search depth (plies)
         bool use_alpha_beta = true;  ///< Enable Alpha-Beta pruning
+        bool use_transposition = true; ///< Enable transposition table
+        int tt_size_bits = 20;       ///< TT size = 2^size_bits (default: 1M entries)
         
         Config() = default;
-        Config(int depth, bool ab = true) 
-            : max_depth(depth), use_alpha_beta(ab) {}
+        Config(int depth, bool ab = true, bool tt = true, int tt_bits = 20) 
+            : max_depth(depth), use_alpha_beta(ab), use_transposition(tt), tt_size_bits(tt_bits) {}
     };
     
     /**
@@ -99,8 +102,23 @@ public:
      */
     void set_config(const Config& config) { config_ = config; }
     
+    /**
+     * @brief Get transposition table statistics
+     */
+    TranspositionTable::Stats get_tt_stats() const {
+        return tt_.get_stats();
+    }
+    
+    /**
+     * @brief Clear transposition table
+     */
+    void clear_tt() {
+        tt_.clear();
+    }
+    
 private:
     Config config_;           ///< Search configuration
+    TranspositionTable tt_;   ///< Transposition table
     int nodes_searched_ = 0;  ///< Node counter (reset each search)
     
     /**

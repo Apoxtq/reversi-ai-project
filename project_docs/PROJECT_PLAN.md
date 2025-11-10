@@ -265,17 +265,46 @@
 
 ---
 
-### Week 5: 置换表与优化 (10/30-11/5) ⏳
+### Week 5: 置换表与优化 (11/10-11/17) 🔄 **进行中**
 
 **说明：** 原Week 2已完成Zobrist哈希基础，Week 5将实现完整的置换表系统。
 
-- [ ] 置换表数据结构（Transposition Table）
-- [ ] 表项替换策略（深度优先/Always Replace）
-- [ ] 哈希碰撞处理
-- [ ] Move Ordering优化（置换表移动优先）
-- [ ] 性能基准测试（缓存命中率）
+**核心任务：**
+- [x] **置换表数据结构** (TranspositionTable) ✨ 已完成
+  - [x] TTEntry结构（hash, score, depth, flag, best_move）
+  - [x] 哈希表实现（2^N大小，快速取模）
+  - [x] 内存对齐优化（16字节对齐）
+- [x] **表项替换策略** ✨ 已完成
+  - [x] 深度优先替换（Depth-preferred）
+  - [x] 空槽检测和碰撞处理
+- [x] **哈希碰撞处理** ✨ 已完成
+  - [x] 64位哈希值验证
+  - [x] 碰撞检测机制（hash匹配）
+- [x] **MinimaxEngine集成** ✨ 已完成
+  - [x] 搜索前查询置换表
+  - [x] 搜索后存储结果
+  - [x] Alpha-Beta边界处理（EXACT/LOWER/UPPER）
+- [x] **Move Ordering优化** ✨ 已完成
+  - [x] 置换表移动优先排序
+  - [x] 与现有评估函数结合
+- [ ] **性能基准测试** ⏳ 待完成
+  - [ ] 缓存命中率统计
+  - [ ] 搜索速度对比（有/无置换表）
+  - [ ] 内存使用监控
+- [ ] **单元测试** ⏳ 待完成
+  - [ ] test_transposition.cpp
+  - [ ] 置换表存储/检索测试
+  - [ ] 深度边界测试
 
-**时间：** ~20-25小时
+**已完成交付成果：**
+- ✅ TranspositionTable.hpp (~200行)
+- ✅ TranspositionTable.cpp (~100行)
+- ✅ MinimaxEngine.hpp/cpp 更新（集成置换表）
+- ✅ week5_transposition_notes.md 学习笔记
+
+**时间：** ~8小时已用 / ~20-25小时计划
+
+**进度：** Day 1-2 完成 (核心功能实现，~40%)，Day 3-7 待完成 (测试+优化)
 
 ---
 

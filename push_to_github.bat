@@ -1,4 +1,7 @@
 @echo off
+REM Set code page to UTF-8 for proper character display
+chcp 65001 >nul 2>&1
+
 REM ============================================
 REM GitHub Push Script
 REM Push local commits to GitHub repository
@@ -24,12 +27,12 @@ echo.
 
 if %ERRORLEVEL% EQU 0 (
     echo ========================================
-    echo   ✓ Successfully pushed to GitHub!
+    echo   [SUCCESS] Successfully pushed to GitHub!
     echo   Repository: https://github.com/Apoxtq/reversi-ai-project
     echo ========================================
 ) else (
     echo ========================================
-    echo   ✗ Push failed! Error code: %ERRORLEVEL%
+    echo   [FAIL] Push failed! Error code: %ERRORLEVEL%
     echo   Please check:
     echo   - Network connection
     echo   - GitHub credentials
