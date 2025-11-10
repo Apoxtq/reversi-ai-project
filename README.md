@@ -49,7 +49,16 @@ quick_compile.bat
 .\bench_week4.exe
 ```
 
-**方式 4: CMake编译**（推荐用于完整开发）
+**方式 4: Week 5 专用构建与测试**（置换表+哈希）
+```powershell
+# 构建 Week 5 专用测试（含置换表）
+.\build_test_week5.bat
+
+# 运行置换表相关单元测试
+.\test_transposition.exe
+```
+
+**方式 5: CMake编译**（推荐用于完整开发）
 ```bash
 cmake -B build -G "MinGW Makefiles"
 cmake --build build
@@ -116,7 +125,7 @@ reversi-ai-project/
 │   │   ├── StabilityAnalyzer.hpp/cpp  # 稳定性分析器 ✅
 │   │   ├── PhaseWeights.hpp           # 阶段化权重系统 ✅
 │   │   ├── MCTSEngine.hpp/cpp         # MCTS引擎 ⏳ Week 9
-│   │   └── TranspositionTable.hpp     # 置换表 ⏳ Week 5
+│   │   └── TranspositionTable.hpp     # 置换表 ✅ Week 5
 │   ├── research/                # 研究工具 ✅
 │   │   └── self_play.cpp        # 自对弈框架（270行）
 │   ├── ui/                      # 用户界面 ⏳ Week 7-8
@@ -136,13 +145,15 @@ reversi-ai-project/
 │   ├── test_undo.cpp            # 撤销测试
 │   ├── test_minimax.cpp         # Minimax测试
 │   ├── test_stability.cpp       # 稳定性分析测试（421行）✅
+│   ├── test_transposition.cpp   # 置换表测试 ✅
 │   ├── quick_self_play.cpp      # 快速自对弈测试 ✅
 │   └── bench_week4.cpp          # Week 4性能基准测试 ✅
 ├── docs/                        # 文档 ✅
 │   ├── week1_bitboard_notes.md       # Week 1笔记（495行）
 │   ├── week2_testing_optimization_notes.md  # Week 2笔记（438行）
 │   ├── week3_minimax_ai_notes.md     # Week 3笔记（674行）
-│   └── week4_advanced_evaluation_notes.md  # Week 4笔记（436行）✅
+│   ├── week4_advanced_evaluation_notes.md  # Week 4笔记（436行）✅
+│   └── week5_transposition_notes.md        # Week 5置换表笔记 ✅
 ├── project_docs/                # 项目文档 ✅
 │   ├── PROJECT_PLAN.md          # 项目计划（661行）
 │   └── TECHNICAL_ISSUES_SOLUTIONS.md  # 技术问题手册
@@ -151,6 +162,7 @@ reversi-ai-project/
 ├── build_week3.ps1              # Week 3编译脚本 ✅
 ├── build_week4.ps1              # Week 4编译脚本 ✅
 ├── build_week4.bat              # Week 4编译脚本（批处理）✅
+├── build_test_week5.bat         # Week 5 测试构建脚本 ✅
 ├── quick_compile.bat            # 快速编译脚本 ✅
 └── CMakeLists.txt               # CMake配置 ✅
 
@@ -213,9 +225,13 @@ reversi-ai-project/
   - [x] 性能基准测试（Week 4仅慢2.9%）
   - [x] 实战验证（10:0完胜Week 3）
   - [x] 完整学习笔记（436行）
-- [ ] **Week 5-6 待开始** ⏸️
-  - [ ] Week 5: 置换表优化（Transposition Table + Zobrist）
-  - [ ] Week 6: 高级搜索技术（迭代加深 + PVS + Move Ordering）
+- [x] **Week 5 完成** ✅ (2025-11-10)
+  - [x] 置换表优化（Transposition Table + Zobrist）
+  - [x] MinimaxEngine 集成与 Move Ordering 优化
+  - [x] 单元测试（test_transposition.cpp）
+  - [x] 性能基准与报告（完成）
+- [ ] **Week 6 待开始** ⏸️
+  - [ ] 高级搜索技术（迭代加深 + PVS + Move Ordering）
 
 ### Phase 3: UI与集成（Week 7-8）
 - [ ] SFML图形界面
@@ -276,7 +292,8 @@ reversi-ai-project/
 - [Week 2 学习笔记 - 测试与优化](docs/week2_testing_optimization_notes.md) ✅ (438行)
 - [Week 3 学习笔记 - Minimax AI引擎](docs/week3_minimax_ai_notes.md) ✅ (674行)
 - [Week 4 学习笔记 - 高级评估函数](docs/week4_advanced_evaluation_notes.md) ✅ (436行)
-- **总计：** 2,043行学习笔记
+- [Week 5 学习笔记 - 置换表与Zobrist](docs/week5_transposition_notes.md) ✅
+- **总计：** 2,043+ 行学习笔记（持续更新）
 
 ### 项目文档
 - [黑白棋规则详解](REVERSI_RULES.md) ✅ (1,694行完整规则说明)
@@ -319,10 +336,10 @@ reversi-ai-project/
 
 ## 🏆 项目状态
 
-**当前阶段**: Phase 1 (Week 1-4) 完成！Week 5 置换表优化进行中  
+**当前阶段**: Phase 1 进行中（Week 5 已完成，准备 Week 6）  
 **开始日期**: 2025年10月8日  
 **预计完成**: 2025年12月31日  
-**进度**: ![](https://img.shields.io/badge/progress-40%25-yellow) ✅
+**进度**: ![](https://img.shields.io/badge/progress-48%25-yellow) ✅
 
 ### ✅ 已完成里程碑（Week 1-3，2025-10-22）
 
@@ -376,16 +393,15 @@ reversi-ai-project/
 
 ### 🔄 进行中任务
 
-- 🔄 **Week 5:** 置换表优化（Transposition Table）✨ 核心功能已完成
-  - ✅ TranspositionTable 类实现
-  - ✅ MinimaxEngine 集成
-  - ✅ Move Ordering 优化
-  - ⏳ 性能基准测试（待完成）
+- 🔄 **Week 6:** 高级搜索技术（迭代加深 + PVS + 窗口优化）
+  - ⏳ Iterative Deepening
+  - ⏳ Principal Variation Search
+  - ⏳ Aspiration Windows
+  - ⏳ Killer Move
 
 ### ⏳ 待开始任务
 
-- ⏸️ **Week 4:** 高级评估函数（性能优化+实验验证）
-- ⏳ **Week 6:** 高级搜索技术（迭代加深+PVS）
+- ⏳ **Week 7-8:** SFML UI + 网络对战
 - ⏳ **Week 7-8:** SFML UI + 网络对战
 - ⏳ **Week 9-11:** MCTS引擎 + 性能对比
 - ⏳ **Week 12:** 最终测试与文档
@@ -413,6 +429,6 @@ reversi-ai-project/
 
 ---
 
-**最后更新**: 2025年10月22日  
-**最新完成**: Week 3 - Minimax AI引擎 (搜索+剪枝+评估) ✅
+**最后更新**: 2025年11月10日  
+**最新完成**: Week 5 - 置换表实现并集成（测试通过） ✅
 
