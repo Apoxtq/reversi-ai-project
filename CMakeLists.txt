@@ -206,6 +206,15 @@ if(TARGET reversi_ai_lib)
         ${CMAKE_CURRENT_SOURCE_DIR}/tests
     )
     add_test(NAME TranspositionTest COMMAND test_transposition)
+    
+    # Week 6 tests - Advanced search techniques
+    add_executable(test_week6 tests/test_week6.cpp)
+    target_link_libraries(test_week6 PRIVATE reversi_core reversi_ai_lib)
+    target_include_directories(test_week6 PRIVATE 
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests
+    )
+    add_test(NAME Week6AdvancedSearchTest COMMAND test_week6)
 endif()
 
 # MCTS tests (Week 9)
@@ -216,6 +225,16 @@ endif()
 # Micro benchmark for core operations (Week 2)
 add_executable(bench_micro tests/bench_micro.cpp)
 target_link_libraries(bench_micro PRIVATE reversi_core)
+
+# Week 6 benchmark - Advanced search optimizations
+if(TARGET reversi_ai_lib)
+    add_executable(bench_week6 tests/bench_week6.cpp)
+    target_link_libraries(bench_week6 PRIVATE reversi_core reversi_ai_lib)
+    target_include_directories(bench_week6 PRIVATE 
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests
+    )
+endif()
 
 # ==================== 安装配置 ====================
 
