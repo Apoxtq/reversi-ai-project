@@ -18,6 +18,7 @@
 #include "MenuSystem.hpp"
 #include "EventHandler.hpp"
 #include "UIComponent.hpp"
+#include "../network/NetworkGame.hpp"
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/System/Clock.hpp>
 #include <memory>
@@ -76,6 +77,16 @@ public:
     void start_game(GameMode mode, std::unique_ptr<ai::AIStrategy> ai_strategy = nullptr);
     
     /**
+     * @brief Start network game (Week 8)
+     * @param is_host Whether this player is the host
+     * @param room_code Room code (for client mode)
+     * @param host_ip Host IP address (for client mode)
+     * @param host_port Host port (for client mode)
+     */
+    void start_network_game(bool is_host, const std::string& room_code = "",
+                            const std::string& host_ip = "", unsigned short host_port = 0);
+    
+    /**
      * @brief Return to main menu
      */
     void return_to_menu();
@@ -116,6 +127,15 @@ private:
     // Animation system
     std::unique_ptr<class AnimationSystem> animation_system_;
     
+    // Network game (Week 8)
+    std::unique_ptr<network::NetworkGame> network_game_;
+    bool is_network_mode_ = false;
+    
+    // Network error message display
+    std::string network_error_message_;
+    float network_error_display_time_ = 0.0f;
+    static constexpr float NETWORK_ERROR_DISPLAY_DURATION = 5.0f;  // seconds
+    
     // Game loop methods
     void handle_events();
     void update(float dt);
@@ -131,6 +151,14 @@ private:
     void update_status_panel();
     void create_status_panel();
     void create_control_buttons();
+    
+    // Network methods (Week 8)
+    void handle_network_move(const core::Move& move, uint64_t board_hash);
+    void handle_network_state_change(network::NetworkGameState state);
+    void handle_network_error(const std::string& error);
+    void update_network_status();
+    void render_network_status(sf::RenderTarget& target);
+    void render_network_error_message(sf::RenderTarget& target);
     
     // Helper methods
     void transition_to_game();

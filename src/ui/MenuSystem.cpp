@@ -52,15 +52,14 @@ void MainMenuState::create_buttons() {
     btn2->set_callback([this]() { selection_ = Selection::LOCAL_2P; });
     buttons_.push_back(std::move(btn2));
     
-    // Button 3: Online (Week 8)
+    // Button 3: Online (Week 8) - Now enabled!
     auto btn3 = std::make_unique<Button>(
-        "Online (Coming Soon)",
+        "Online",
         sf::Vector2f(center_x, start_y + 2 * (button_height + button_spacing)),
         sf::Vector2f(button_width, button_height),
-        Button::Style::SECONDARY
+        Button::Style::PRIMARY
     );
     btn3->set_callback([this]() { selection_ = Selection::ONLINE; });
-    btn3->set_enabled(false); // Disabled until Week 8
     buttons_.push_back(std::move(btn3));
     
     // Button 4: Benchmark Suite

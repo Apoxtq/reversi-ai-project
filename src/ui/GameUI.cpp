@@ -86,6 +86,10 @@ void GameUI::handle_events() {
                 start_game(GameMode::VS_AI, std::move(ai_strategy));
             } else if (selection == MainMenuState::Selection::LOCAL_2P) {
                 start_game(GameMode::LOCAL_2P);
+            } else if (selection == MainMenuState::Selection::ONLINE) {
+                // Network game - start as host (Week 8)
+                // TODO: Integrate with NetworkLobbyState for full UI (create/join room)
+                start_network_game(true);  // Start as host for now
             } else if (selection == MainMenuState::Selection::EXIT) {
                 window_.close();
             }
@@ -165,8 +169,24 @@ void GameUI::update(float dt) {
             board_renderer_->update(dt);
         }
         
-        // Update AI
-        update_ai();
+        // Update network game (Week 8)
+        if (is_network_mode_ && network_game_) {
+            network_game_->update(dt);
+            update_network_status();
+        }
+        
+        // Update network error message display timer
+        if (network_error_display_time_ > 0.0f) {
+            network_error_display_time_ -= dt;
+            if (network_error_display_time_ <= 0.0f) {
+                network_error_message_.clear();
+            }
+        }
+        
+        // Update AI (only if not network mode)
+        if (!is_network_mode_) {
+            update_ai();
+        }
         
         // Update status panel
         update_status_panel();
@@ -220,6 +240,16 @@ void GameUI::render() {
             window_.draw(*status_panel_);
         }
         
+        // Draw network status (Week 8)
+        if (is_network_mode_) {
+            render_network_status(window_);
+        }
+        
+        // Draw network error message (Week 8)
+        if (!network_error_message_.empty() && network_error_display_time_ > 0.0f) {
+            render_network_error_message(window_);
+        }
+        
         // Draw control buttons
         if (home_button_) {
             window_.draw(*home_button_);
@@ -263,6 +293,45 @@ void GameUI::start_game(GameMode mode, std::unique_ptr<ai::AIStrategy> ai_strate
     
     // Transition to game state
     transition_to_game();
+}
+
+void GameUI::start_network_game(bool is_host, const std::string& room_code,
+                                const std::string& host_ip, unsigned short host_port) {
+    // Create network game
+    network::NetworkRole role = is_host ? network::NetworkRole::HOST : network::NetworkRole::CLIENT;
+    network_game_ = std::make_unique<network::NetworkGame>(role);
+    
+    // Set up callbacks
+    network_game_->set_move_received_callback([this](const core::Move& move, uint64_t board_hash) {
+        handle_network_move(move, board_hash);
+    });
+    
+    network_game_->set_state_changed_callback([this](network::NetworkGameState state) {
+        handle_network_state_change(state);
+    });
+    
+    network_game_->set_error_callback([this](const std::string& error) {
+        handle_network_error(error);
+    });
+    
+    // Start network connection
+    if (is_host) {
+        std::string code = network_game_->start_as_host(0);
+        if (code.empty()) {
+            std::cerr << "Failed to create room\n";
+            return;
+        }
+        std::cout << "Room created: " << code << "\n";
+    } else {
+        bool connected = network_game_->start_as_client(room_code, host_ip, host_port);
+        if (!connected) {
+            std::cerr << "Failed to connect to host\n";
+            return;
+        }
+    }
+    
+    // Start game in online mode
+    start_game(GameMode::ONLINE);
 }
 
 void GameUI::return_to_menu() {
@@ -310,6 +379,25 @@ void GameUI::process_game_event(const GameEvent& event) {
 
 void GameUI::make_move(const core::Move& move) {
     if (!game_state_ || !board_renderer_) return;
+    
+    // If network mode, send move over network
+    if (is_network_mode_ && network_game_ && network_game_->is_connected()) {
+        // Reconstruct current board state
+        core::Board board;
+        for (const auto& past_move : game_state_->get_move_history()) {
+            if (past_move.is_pass()) {
+                board.pass();
+            } else {
+                board.make_move(past_move.position);
+            }
+        }
+        
+        // Send move over network
+        if (!network_game_->send_move(move, board)) {
+            std::cerr << "Failed to send move over network\n";
+            return;
+        }
+    }
     
     // Get current board state from renderer
     // Note: In a more complete implementation, we'd maintain board state separately
@@ -517,6 +605,155 @@ void GameUI::transition_to_game_over() {
     if (home_button_) {
         home_button_->set_enabled(true);
     }
+}
+
+// Network methods (Week 8)
+void GameUI::handle_network_move(const core::Move& move, uint64_t board_hash) {
+    if (!game_state_ || !board_renderer_) return;
+    
+    // Reconstruct current board state
+    core::Board board;
+    for (const auto& past_move : game_state_->get_move_history()) {
+        if (past_move.is_pass()) {
+            board.pass();
+        } else {
+            board.make_move(past_move.position);
+        }
+    }
+    
+    // Verify board hash
+    uint64_t local_hash = board.hash();
+    if (local_hash != board_hash) {
+        // State mismatch - request sync
+        if (network_game_) {
+            network_game_->request_sync(board_hash);
+        }
+        std::cerr << "Board state mismatch detected! Local: " << local_hash 
+                  << ", Remote: " << board_hash << "\n";
+        return;
+    }
+    
+    // Apply move (this will update game state and board renderer)
+    // Note: We need to apply the move without sending it back over network
+    bool was_network_mode = is_network_mode_;
+    is_network_mode_ = false;  // Temporarily disable to avoid sending back
+    make_move(move);
+    is_network_mode_ = was_network_mode;
+}
+
+void GameUI::handle_network_state_change(network::NetworkGameState state) {
+    switch (state) {
+        case network::NetworkGameState::CONNECTED:
+            std::cout << "Network: Connected\n";
+            break;
+        case network::NetworkGameState::PLAYING:
+            std::cout << "Network: Game started\n";
+            break;
+        case network::NetworkGameState::DISCONNECTED:
+            std::cout << "Network: Disconnected\n";
+            break;
+        case network::NetworkGameState::ERROR:
+            std::cerr << "Network: Error state\n";
+            break;
+        default:
+            break;
+    }
+}
+
+void GameUI::handle_network_error(const std::string& error) {
+    std::cerr << "Network error: " << error << "\n";
+    
+    // Store error message for UI display
+    network_error_message_ = error;
+    network_error_display_time_ = NETWORK_ERROR_DISPLAY_DURATION;
+    
+    // Also log to console for debugging
+    std::cout << "[Network Error] " << error << "\n";
+}
+
+void GameUI::update_network_status() {
+    // Network status is updated in render_network_status()
+    // This method can be used for additional status updates if needed
+}
+
+void GameUI::render_network_status(sf::RenderTarget& target) {
+    if (!network_game_) return;
+    
+    // Get network status
+    uint32_t rtt = network_game_->get_rtt_ms();
+    bool connected = network_game_->is_connected();
+    network::NetworkGameState state = network_game_->get_state();
+    
+    // Get or create font (with fallback)
+    static sf::Font status_font;
+    static bool font_loaded = false;
+    
+    if (!font_loaded) {
+        // Try to load font from UIStyle or use default
+        // For now, we'll use SFML's default font capability
+        // In a full implementation, this would use UIStyle::get_font()
+        font_loaded = true;  // Mark as attempted (will use system default if needed)
+    }
+    
+    // Position: top-right corner
+    float x = UIStyle::WINDOW_WIDTH - 250.0f;
+    float y = UIStyle::SPACING_MD;
+    
+    // Status indicator circle (🟢🟡🔴)
+    float circle_radius = 8.0f;
+    sf::CircleShape status_indicator(circle_radius);
+    status_indicator.setPosition(x, y + 5.0f);
+    
+    // Color based on connection status and RTT
+    if (!connected || state == network::NetworkGameState::ERROR) {
+        status_indicator.setFillColor(sf::Color::Red);  // 🔴 Disconnected/Error
+    } else if (rtt == 0 || rtt < 50) {
+        status_indicator.setFillColor(sf::Color::Green);  // 🟢 LAN (excellent)
+    } else if (rtt < 150) {
+        status_indicator.setFillColor(sf::Color::Yellow);  // 🟡 Internet (good)
+    } else {
+        status_indicator.setFillColor(sf::Color(255, 165, 0));  // 🟠 High latency
+    }
+    
+    target.draw(status_indicator);
+    
+    // Status text (if font is available, otherwise skip text)
+    // Note: In a full implementation, we would use UIStyle::get_font()
+    // For now, we'll render the indicator circle which works without font
+    // Text rendering can be added when font system is fully integrated
+    
+    // Alternative: Render simple status using shapes if font not available
+    // For now, the colored circle indicator is sufficient
+}
+
+void GameUI::render_network_error_message(sf::RenderTarget& target) {
+    if (network_error_message_.empty()) return;
+    
+    // Render error message as a semi-transparent panel at the top center
+    float panel_width = 600.0f;
+    float panel_height = 60.0f;
+    float panel_x = (UIStyle::WINDOW_WIDTH - panel_width) / 2.0f;
+    float panel_y = UIStyle::SPACING_MD;
+    
+    // Background panel (semi-transparent red)
+    sf::RectangleShape error_panel(sf::Vector2f(panel_width, panel_height));
+    error_panel.setPosition(panel_x, panel_y);
+    error_panel.setFillColor(sf::Color(217, 83, 79, 200));  // ERROR_RED with alpha
+    error_panel.setOutlineColor(sf::Color(217, 83, 79));
+    error_panel.setOutlineThickness(2.0f);
+    target.draw(error_panel);
+    
+    // Error icon (simple red circle)
+    float icon_radius = 12.0f;
+    sf::CircleShape error_icon(icon_radius);
+    error_icon.setPosition(panel_x + UIStyle::SPACING_MD, 
+                          panel_y + (panel_height - icon_radius * 2) / 2.0f);
+    error_icon.setFillColor(sf::Color::White);
+    target.draw(error_icon);
+    
+    // Note: Text rendering would require font, which is handled by UIStyle system
+    // For now, the visual indicator (red panel + icon) is sufficient
+    // Full text rendering can be added when font system is integrated
 }
 
 } // namespace ui

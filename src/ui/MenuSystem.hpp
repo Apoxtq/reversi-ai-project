@@ -86,7 +86,7 @@ public:
         NONE,
         VS_AI,
         LOCAL_2P,
-        ONLINE,
+        ONLINE,  // Week 8: Network multiplayer
         BENCHMARK,
         EXIT
     };

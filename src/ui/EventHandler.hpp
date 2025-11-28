@@ -30,7 +30,13 @@ enum class GameEventType {
     PAUSE_REQUESTED,    // Pause requested
     UNDO_REQUESTED,     // Undo requested
     MENU_REQUESTED,     // Return to menu
-    SETTINGS_CHANGED    // Settings changed
+    SETTINGS_CHANGED,   // Settings changed
+    // Network events (Week 8)
+    NETWORK_CONNECTED,      // Network connection established
+    NETWORK_DISCONNECTED,   // Network connection lost
+    NETWORK_MOVE_RECEIVED,  // Move received from network
+    NETWORK_SYNC_REQUESTED, // State sync requested
+    NETWORK_ERROR           // Network error occurred
 };
 
 /**

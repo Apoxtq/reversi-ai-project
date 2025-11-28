@@ -98,7 +98,42 @@ coverage/
 # GitHub docs in project_docs/github/
 # All documentation should be version controlled!
 
-# Keep important directories
+# Keep important directories and files
 !docs/
+!docs/**/*.md
+!project_docs/
+!project_docs/**/*.md
 !data/test_positions/
 !.gitkeep
+
+# Explicitly track all documentation files
+!*.md
+!README.md
+!REVERSI_RULES.md
+
+# Ensure deleted files are tracked in Git
+# Note: When files are deleted, use 'git rm' to stage deletions
+# This ensures deleted files are properly tracked in Git history
+#
+# Important: All documentation files (*.md) are explicitly tracked
+# Deleted files should be staged with 'git rm <file>' to preserve deletion history
+#
+# Files that were cleaned up (2025-11-28):
+# - compile_week3.bat, build_week3.ps1, build_week4.bat, build_week4.ps1
+# - build_test_week5.bat, direct_compile.bat
+# - project_docs/GITHUB_PUSH_SUMMARY.md
+# - project_docs/github/PROJECT_SETUP_SUMMARY.md
+# - docs/notes/Bitboard_Day1.md
+# - project_docs/WEEK7_REVIEW_REPORT.md (merged into WEEK7_FINAL_ASSESSMENT.md)
+# - project_docs/WEEK8_DESIGN_REVIEW.md (merged into WEEK8_FINAL_ASSESSMENT.md)
+#
+# All Week 8 documentation is tracked:
+# - docs/week8_network_multiplayer_notes.md (updated with final improvements)
+# - project_docs/WEEK8_FINAL_ASSESSMENT.md (includes design review summary)
+#
+# Ensure source code files are tracked (not ignored)
+# Source files in src/ and tests/ should always be tracked
+!src/
+!src/**/*
+!tests/
+!tests/**/*

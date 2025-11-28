@@ -80,14 +80,16 @@ set(UI_SOURCES
     src/ui/EventHandler.cpp
     src/ui/AnimationSystem.cpp
     src/ui/GameUI.cpp
+    # Week 8: Network Lobby
+    src/ui/NetworkLobbyState.cpp
 )
 
-# 网络源文件
+# 网络源文件 (Week 8)
 set(NETWORK_SOURCES
-    # 网络实现（待实现）
-    # src/network/Protocol.cpp
-    # src/network/NetworkGame.cpp
-    # src/network/RoomManager.cpp
+    src/network/NetworkProtocol.cpp
+    src/network/TCPSocket.cpp
+    src/network/RoomManager.cpp
+    src/network/NetworkGame.cpp
 )
 
 # 研究评估源文件
@@ -123,12 +125,17 @@ if(UI_SOURCES AND SFML_FOUND)
     add_library(reversi_ui STATIC ${UI_SOURCES})
     target_include_directories(reversi_ui PUBLIC 
         ${CMAKE_CURRENT_SOURCE_DIR}/src/ui
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/network
     )
     target_link_libraries(reversi_ui PUBLIC 
         sfml-system sfml-window sfml-graphics
     )
     if(TARGET reversi_core)
         target_link_libraries(reversi_ui PUBLIC reversi_core)
+    endif()
+    if(TARGET reversi_network)
+        target_link_libraries(reversi_ui PUBLIC reversi_network)
     endif()
 endif()
 
@@ -137,6 +144,7 @@ if(NETWORK_SOURCES AND SFML_FOUND)
     add_library(reversi_network STATIC ${NETWORK_SOURCES})
     target_include_directories(reversi_network PUBLIC 
         ${CMAKE_CURRENT_SOURCE_DIR}/src/network
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/core
     )
     target_link_libraries(reversi_network PUBLIC 
         sfml-system sfml-network
@@ -243,6 +251,17 @@ if(TARGET reversi_ai_lib)
         ${CMAKE_CURRENT_SOURCE_DIR}/tests
     )
     add_test(NAME Week6AdvancedSearchTest COMMAND test_week6)
+    
+    # Week 8 tests - Network module
+    if(TARGET reversi_network)
+        add_executable(test_network tests/test_network.cpp)
+        target_link_libraries(test_network PRIVATE reversi_core reversi_network)
+        target_include_directories(test_network PRIVATE 
+            ${CMAKE_CURRENT_SOURCE_DIR}/src
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests
+        )
+        add_test(NAME NetworkModuleTest COMMAND test_network)
+    endif()
 endif()
 
 # MCTS tests (Week 9)
