@@ -78,6 +78,19 @@ cmake --build build
 .\build\bin\reversi_ai.exe
 ```
 
+**方式 7: Week 7 UI应用**（SFML图形界面）
+```bash
+# 使用CMake构建（需要SFML）
+cmake -B build -G "MinGW Makefiles" -DSFML_DIR=D:/SFML/SFML-2.5.1/lib/cmake/SFML
+cmake --build build
+
+# 运行UI应用
+.\build\bin\reversi_ui_app.exe
+```
+
+> ⚠️ **注意**: Week 7 UI需要SFML 2.5+。如果未安装SFML，UI应用将不会构建。
+> 已知限制：字体系统为占位符（按钮功能正常但文本不显示），状态面板显示简化。
+
 > 💡 **提示**: 如遇到编译问题，请参考 [技术问题手册](project_docs/TECHNICAL_ISSUES_SOLUTIONS.md)（本地文档）
 
 ### 系统要求
@@ -258,7 +271,7 @@ reversi-ai-project/
   - [x] 代码质量：无linter错误，符合C++20最佳实践
 
 ### Phase 3: UI与集成（Week 7-8）
-- [ ] SFML图形界面
+- [x] SFML图形界面 ✅ Week 7完成
 - [ ] 网络对战模块
 - [ ] 系统集成
 

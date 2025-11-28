@@ -29,10 +29,17 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 # ==================== 依赖项配置 ====================
 
 # 查找 SFML (optional for now, required before Week 7)
+# Set SFML directory (installed at D:\SFML\SFML-2.5.1)
+set(SFML_DIR "D:/SFML/SFML-2.5.1/lib/cmake/SFML" CACHE PATH "SFML installation directory")
 find_package(SFML 2.5 COMPONENTS system window graphics network audio)
-if(NOT SFML_FOUND)
+if(SFML_FOUND)
+    message(STATUS "SFML found: ${SFML_VERSION}")
+    message(STATUS "SFML libraries: ${SFML_LIBRARIES}")
+else()
     message(WARNING "SFML not found. UI and Network features will be disabled.")
-    message(WARNING "Install SFML before Week 7: scoop install sfml")
+    message(WARNING "SFML installed at: D:/SFML/SFML-2.5.1")
+    message(WARNING "If CMake cannot find SFML, set SFML_DIR manually:")
+    message(WARNING "  cmake -DSFML_DIR=D:/SFML/SFML-2.5.1/lib/cmake/SFML")
 endif()
 
 # 查找 Google Test (optional, required before Week 3)
@@ -64,10 +71,15 @@ set(AI_SOURCES
 
 # UI 源文件
 set(UI_SOURCES
-    # UI 实现（待实现）
-    # src/ui/GameUI.cpp
-    # src/ui/BoardRenderer.cpp
-    # src/ui/MenuSystem.cpp
+    # Week 7: UI Core Components
+    src/ui/UIStyle.cpp
+    src/ui/GameState.cpp
+    src/ui/UIComponent.cpp
+    src/ui/MenuSystem.cpp
+    src/ui/BoardRenderer.cpp
+    src/ui/EventHandler.cpp
+    src/ui/AnimationSystem.cpp
+    src/ui/GameUI.cpp
 )
 
 # 网络源文件
@@ -151,7 +163,23 @@ endif()
 # ==================== 主程序 ====================
 
 # 主程序（当前创建占位符）
+# Main executables
 add_executable(reversi_ai src/main.cpp)
+if(TARGET reversi_core)
+    target_link_libraries(reversi_ai PUBLIC reversi_core)
+endif()
+if(TARGET reversi_ai_lib)
+    target_link_libraries(reversi_ai PUBLIC reversi_ai_lib)
+endif()
+
+# Week 7: UI Application
+if(UI_SOURCES AND SFML_FOUND)
+    add_executable(reversi_ui_app src/main_ui.cpp)
+    target_link_libraries(reversi_ui_app PUBLIC 
+        reversi_ui reversi_ai_lib reversi_core
+        sfml-system sfml-window sfml-graphics
+    )
+endif()
 
 # 链接所有库（如果存在）
 if(TARGET reversi_core)
