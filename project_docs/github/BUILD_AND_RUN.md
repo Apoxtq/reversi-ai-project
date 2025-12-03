@@ -145,9 +145,9 @@ build/
 - [ ] Opening book
 
 ### Week 9-11: Research & Optimization
-- [ ] MCTS implementation
-- [ ] Performance benchmarking
-- [ ] Algorithm comparison
+- [x] MCTS implementation ✅ (Week 9完成)
+- [ ] Performance benchmarking (Week 10计划)
+- [ ] Algorithm comparison (Week 10-11计划)
 
 ### Week 12: Final Testing
 - [ ] Bug fixes

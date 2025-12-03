@@ -63,6 +63,16 @@ cmake --build build
 > - ✅ 移动同步与状态验证
 > - ⚠️ 断线重连：心跳超时检测完成，自动重连待完善
 
+**方式 5: Week 9 MCTS测试**（MCTS引擎测试）
+```bash
+# 使用CMake构建
+cmake -B build -G "MinGW Makefiles"
+cmake --build build
+
+# 运行MCTS单元测试（8个测试用例）
+.\build\tests\test_mcts.exe
+```
+
 > 💡 **提示**: 如遇到编译问题，请参考 [技术问题手册](project_docs/TECHNICAL_ISSUES_SOLUTIONS.md)（本地文档）
 
 ### 系统要求
@@ -131,7 +141,7 @@ reversi-ai-project/
 │   │   ├── Evaluator_Week4.hpp/cpp    # Week 4增强评估（稳定性+阶段化）✅
 │   │   ├── StabilityAnalyzer.hpp/cpp  # 稳定性分析器 ✅
 │   │   ├── PhaseWeights.hpp           # 阶段化权重系统 ✅
-│   │   ├── MCTSEngine.hpp/cpp         # MCTS引擎 ⏳ Week 9
+│   │   ├── MCTSEngine.hpp/cpp         # MCTS引擎 ✅ Week 9完成
 │   │   └── TranspositionTable.hpp     # 置换表 ✅ Week 5
 │   ├── research/                # 研究工具 ✅
 │   │   └── self_play.cpp        # 自对弈框架（270行）
@@ -157,14 +167,22 @@ reversi-ai-project/
 │   ├── test_minimax.cpp         # Minimax测试
 │   ├── test_stability.cpp       # 稳定性分析测试（421行）✅
 │   ├── test_transposition.cpp   # 置换表测试 ✅
+│   ├── test_week6.cpp           # Week 6高级搜索测试（8个测试用例）✅
+│   ├── test_network.cpp         # Week 8网络模块测试（5个测试用例）✅
+│   ├── test_mcts.cpp            # Week 9 MCTS引擎测试（8个测试用例）✅
 │   ├── quick_self_play.cpp      # 快速自对弈测试 ✅
-│   └── bench_week4.cpp          # Week 4性能基准测试 ✅
+│   ├── bench_week4.cpp          # Week 4性能基准测试 ✅
+│   └── bench_week6.cpp          # Week 6性能基准测试（5个基准）✅
 ├── docs/                        # 文档 ✅
 │   ├── week1_bitboard_notes.md       # Week 1笔记（495行）
 │   ├── week2_testing_optimization_notes.md  # Week 2笔记（438行）
 │   ├── week3_minimax_ai_notes.md     # Week 3笔记（674行）
 │   ├── week4_advanced_evaluation_notes.md  # Week 4笔记（436行）✅
-│   └── week5_transposition_notes.md        # Week 5置换表笔记 ✅
+│   ├── week5_transposition_notes.md        # Week 5置换表笔记 ✅
+│   ├── week6_advanced_search_notes.md      # Week 6笔记（488行）✅
+│   ├── week7_sfml_ui_notes.md              # Week 7笔记（754行）✅
+│   ├── week8_network_multiplayer_notes.md  # Week 8笔记（965行）✅
+│   └── week9_mcts_implementation_notes.md  # Week 9笔记（849行）✅
 ├── project_docs/                # 项目文档 ✅
 │   ├── PROJECT_PLAN.md          # 项目计划（661行）
 │   └── TECHNICAL_ISSUES_SOLUTIONS.md  # 技术问题手册
@@ -281,9 +299,16 @@ reversi-ai-project/
 - [x] 系统集成 ✅ Week 8完成
 
 ### Phase 4: 研究与优化（Week 9-11）
-- [ ] MCTS引擎实现
-- [ ] 算法性能对比
-- [ ] 深度优化研究
+- [x] **Week 9 完成** ✅ (2025-12-03)
+  - [x] MCTS引擎实现（四个阶段：Selection, Expansion, Simulation, Backpropagation）
+  - [x] UCB1选择策略（可配置探索常数）
+  - [x] 启发式对局策略（位置评估+机动性）
+  - [x] AIStrategy接口实现（与Minimax引擎可互换）
+  - [x] 统计信息收集（MCTSStats扩展）
+  - [x] 单元测试（test_mcts.cpp，8个测试用例）
+  - [x] 完整学习笔记（week9_mcts_implementation_notes.md）
+- [ ] 算法性能对比（Week 10计划）
+- [ ] 深度优化研究（Week 10-11计划）
 
 ### Phase 5: 完成交付（Week 12）
 - [ ] 最终测试
@@ -299,6 +324,11 @@ reversi-ai-project/
   - ✅ 迭代加深搜索 + 时间管理
   - ✅ PVS + Aspiration Windows + Killer Moves
   - ✅ AIStrategy接口实现（符合架构设计）
+- ✅ **MCTS算法实现**（Week 9完成）✅
+  - ✅ 四个阶段完整实现（Selection, Expansion, Simulation, Backpropagation）
+  - ✅ UCB1选择策略（可配置探索常数）
+  - ✅ 启发式对局策略（位置评估+机动性）
+  - ✅ AIStrategy接口实现（与Minimax可互换）
 - ✅ **Bitboard棋盘表示和高效移动生成**（Week 1-2完成）
 - ✅ **本地双人和人机对战（可调难度）**（Week 3完成）
 - ✅ **局域网多人对战**（Week 8完成）✅
@@ -325,7 +355,7 @@ reversi-ai-project/
 | 游戏模拟 | ≥5K games/s | 124K games/s | ✅ 2480% |
 | Minimax吞吐量 | ≥2.0M nodes/s | 1.91M nodes/s | ✅ 95% |
 | Alpha-Beta剪枝 | >50% 节点减少 | 67.5% | ✅ 135% |
-| MCTS模拟速度 | ≥200K sims/s | TBD | ⏳ Week 9 |
+| MCTS模拟速度 | ≥200K sims/s | 待测试 | ⏳ Week 10基准测试 |
 | LAN对战稳定性 | 10/10 games | TBD | ⏳ Week 7-8 |
 | AI稳定性 | 100 games 0 crash | TBD | ⏳ Week 9 |
 
@@ -333,16 +363,17 @@ reversi-ai-project/
 
 ## 📖 文档
 
-### 学习笔记（Week 1-8完成）
+### 学习笔记（Week 1-9完成）
 - [Week 1 学习笔记 - Bitboard核心系统](docs/week1_bitboard_notes.md) ✅ (495行)
 - [Week 2 学习笔记 - 测试与优化](docs/week2_testing_optimization_notes.md) ✅ (438行)
 - [Week 3 学习笔记 - Minimax AI引擎](docs/week3_minimax_ai_notes.md) ✅ (674行)
 - [Week 4 学习笔记 - 高级评估函数](docs/week4_advanced_evaluation_notes.md) ✅ (436行)
 - [Week 5 学习笔记 - 置换表与Zobrist](docs/week5_transposition_notes.md) ✅ (393行)
-- [Week 6 学习笔记 - 高级搜索技术](docs/week6_advanced_search_notes.md) ✅ (新增)
-- [Week 7 学习笔记 - SFML UI系统](docs/week7_sfml_ui_notes.md) ✅ (新增)
-- [Week 8 学习笔记 - 网络对战功能](docs/week8_network_multiplayer_notes.md) ✅ (新增)
-- **总计：** 3,500+ 行学习笔记（持续更新）
+- [Week 6 学习笔记 - 高级搜索技术](docs/week6_advanced_search_notes.md) ✅ (488行)
+- [Week 7 学习笔记 - SFML UI系统](docs/week7_sfml_ui_notes.md) ✅ (754行)
+- [Week 8 学习笔记 - 网络对战功能](docs/week8_network_multiplayer_notes.md) ✅ (965行)
+- [Week 9 学习笔记 - MCTS引擎实现](docs/week9_mcts_implementation_notes.md) ✅ (849行)
+- **总计：** 5,492+ 行学习笔记（持续更新）
 
 ### 项目文档
 - [黑白棋规则详解](REVERSI_RULES.md) ✅ (1,694行完整规则说明)
@@ -350,11 +381,12 @@ reversi-ai-project/
 - [技术问题手册](project_docs/TECHNICAL_ISSUES_SOLUTIONS.md) ✅ (问题解决方案)
 
 ### 测试与基准
-- 13个测试程序（100%通过）
+- 14个测试程序（100%通过）
   - test_minimax.cpp, test_transposition.cpp, test_stability.cpp
   - test_week6.cpp（Week 6新功能测试，8个测试用例）✅
   - test_network.cpp（Week 8网络模块测试，5个测试用例）✅
   - test_week8_improvements.cpp（Week 8 UI改进测试）✅
+  - test_mcts.cpp（Week 9 MCTS引擎测试，8个测试用例）✅
 - 4个基准测试程序
   - bench_micro, bench_week3, bench_week4
   - bench_week6.cpp（Week 6性能基准，5个基准测试）✅
@@ -391,12 +423,12 @@ reversi-ai-project/
 
 ## 🏆 项目状态
 
-**当前阶段**: Phase 1-2 完成 ✅（Week 1-8完成），Phase 3 准备中（Week 9-11）  
+**当前阶段**: Phase 1-3 部分完成 ✅（Week 1-9完成），Phase 4 进行中（Week 10-11）  
 **开始日期**: 2025年10月8日  
 **预计完成**: 2025年12月31日  
-**进度**: ![](https://img.shields.io/badge/progress-67%25-green) ✅
+**进度**: ![](https://img.shields.io/badge/progress-75%25-green) ✅
 
-### ✅ 已完成里程碑（Week 1-8，2025-11-28）
+### ✅ 已完成里程碑（Week 1-9，2025-12-03）
 
 **Week 1 - Bitboard核心系统** (100%) ✅
 - [x] Board类 - 64位棋盘表示（447行核心代码）
@@ -500,9 +532,23 @@ reversi-ai-project/
   - ✅ 完整学习笔记（week8_network_multiplayer_notes.md）
   - ✅ 代码质量：无编译错误，无linter错误，符合最佳实践
 
+### ✅ 最新完成（2025-12-03）
+
+- ✅ **Week 9:** MCTS引擎实现全部完成
+  - ✅ 四个阶段完整实现（Selection, Expansion, Simulation, Backpropagation）
+  - ✅ UCB1选择策略（可配置探索常数√2）
+  - ✅ 启发式对局策略（位置评估+机动性，top 30%选择）
+  - ✅ AIStrategy接口实现（与Minimax引擎可互换）
+  - ✅ 统计信息收集（MCTSStats：模拟次数、树节点、深度、胜率等）
+  - ✅ 时间管理优化（每100次模拟检查一次，减少99%开销）
+  - ✅ 单元测试（test_mcts.cpp，8个测试用例，全部通过）
+  - ✅ 完整学习笔记（week9_mcts_implementation_notes.md，849行）
+  - ✅ 代码质量：无编译错误，无linter错误，符合C++20最佳实践
+
 ### ⏳ 待开始任务
 
-- ⏳ **Week 9-11:** MCTS引擎 + 性能对比
+- ⏳ **Week 10:** MCTS性能基准测试 + Minimax vs MCTS对比
+- ⏳ **Week 11:** 深度优化研究 + 统计分析
 - ⏳ **Week 12:** 最终测试与文档
 
 ### 🎯 关键成果
@@ -525,14 +571,14 @@ reversi-ai-project/
   - 网络大厅UI（创建/加入房间）
 
 **测试与基准：**
-- ✨ 10+个测试程序（100%通过）
-  - test_minimax, test_transposition, test_week6等
+- ✨ 14个测试程序（100%通过）
+  - test_minimax, test_transposition, test_week6, test_network, test_mcts等
 - ✨ 撤销移动系统（支持搜索树遍历）
 - ✨ 哈希一致性验证（10,000局）
 - ✨ 完整性能基准测试框架（bench_week3/4/6）
 
 **文档与学习：**
-- ✨ 8份完整学习笔记（Week 1-8，共3,500+行）
+- ✨ 9份完整学习笔记（Week 1-9，共5,492+行）
 - ✨ 完整的游戏规则文档（1694行）
 - ✨ 详细的项目计划和进度跟踪
 - ✨ 技术问题手册和GitHub文档
@@ -540,14 +586,15 @@ reversi-ai-project/
 
 ---
 
-**最后更新**: 2025年11月28日  
-**最新完成**: Week 8 - 网络对战功能全部完成 ✅
-- ✅ 所有功能实现并测试通过
-- ✅ Peer-to-Peer架构完全符合设计文档要求
-- ✅ 网络协议、房间管理、移动同步全部实现
-- ✅ UI集成完整（网络状态显示，错误处理）
-- ✅ 测试已集成到CMake构建系统
+**最后更新**: 2025年12月3日  
+**最新完成**: Week 9 - MCTS引擎实现全部完成 ✅
+- ✅ MCTS四个阶段完整实现（Selection, Expansion, Simulation, Backpropagation）
+- ✅ UCB1选择策略实现（可配置探索常数）
+- ✅ 启发式对局策略实现（位置评估+机动性）
+- ✅ AIStrategy接口实现（与Minimax引擎可互换）
+- ✅ 统计信息收集完整（MCTSStats扩展）
+- ✅ 单元测试全部通过（8个测试用例）
 - ✅ 代码质量达到生产标准（无编译错误，无linter错误）
-- ✅ 设计模式应用正确（Adapter, Singleton, State, Strategy）
-- ✅ 项目已准备好上传GitHub作为Week 8版本
+- ✅ 完整学习笔记（849行）
+- ✅ 项目已准备好进行Week 10性能基准测试和算法对比
 

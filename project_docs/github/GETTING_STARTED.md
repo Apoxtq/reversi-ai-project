@@ -173,7 +173,7 @@ C++ 标准: C++17
 1. 完成 Week 1 Bitboard 学习
 2. 实现 Board 类（Week 3）
 3. 实现 Minimax 引擎（Week 4）
-4. 实现 MCTS 引擎（Week 5）
+4. 实现 MCTS 引擎（Week 9）✅
 
 🚀 项目启动成功！开始你的学习之旅吧！
 ```
