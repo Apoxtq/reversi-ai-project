@@ -118,18 +118,19 @@ coverage/
 # Important: All documentation files (*.md) are explicitly tracked
 # Deleted files should be staged with 'git rm <file>' to preserve deletion history
 #
-# Files that were cleaned up (2025-11-28):
+# Files that were cleaned up:
 # - compile_week3.bat, build_week3.ps1, build_week4.bat, build_week4.ps1
 # - build_test_week5.bat, direct_compile.bat
 # - project_docs/GITHUB_PUSH_SUMMARY.md
 # - project_docs/github/PROJECT_SETUP_SUMMARY.md
 # - docs/notes/Bitboard_Day1.md
-# - project_docs/WEEK7_REVIEW_REPORT.md (merged into WEEK7_FINAL_ASSESSMENT.md)
-# - project_docs/WEEK8_DESIGN_REVIEW.md (merged into WEEK8_FINAL_ASSESSMENT.md)
+# - project_docs/WEEK7_FINAL_ASSESSMENT.md (deleted 2025-12-03, historical record)
+# - project_docs/WEEK8_FINAL_ASSESSMENT.md (deleted 2025-12-03, historical record)
 #
-# All Week 8 documentation is tracked:
-# - docs/week8_network_multiplayer_notes.md (updated with final improvements)
-# - project_docs/WEEK8_FINAL_ASSESSMENT.md (includes design review summary)
+# All documentation is tracked:
+# - docs/week8_network_multiplayer_notes.md (Week 8 learning notes)
+# - docs/week9_mcts_implementation_notes.md (Week 9 learning notes)
+# - project_docs/WEEK9_* (Week 9 assessment documents)
 #
 # Ensure source code files are tracked (not ignored)
 # Source files in src/ and tests/ should always be tracked

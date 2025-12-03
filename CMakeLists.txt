@@ -66,7 +66,8 @@ set(AI_SOURCES
     src/ai/MinimaxEngine.cpp
     # Week 5: Transposition table
     src/ai/TranspositionTable.cpp
-    # src/ai/MCTSEngine.cpp         # Week 9
+    # Week 9: MCTS engine
+    src/ai/MCTSEngine.cpp
 )
 
 # UI 源文件
@@ -262,10 +263,18 @@ if(TARGET reversi_ai_lib)
         )
         add_test(NAME NetworkModuleTest COMMAND test_network)
     endif()
+    
+    # Week 9 tests - MCTS engine
+    add_executable(test_mcts tests/test_mcts.cpp)
+    target_link_libraries(test_mcts PRIVATE reversi_core reversi_ai_lib)
+    target_include_directories(test_mcts PRIVATE 
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests
+    )
+    add_test(NAME MCTSEngineTest COMMAND test_mcts)
 endif()
 
-# MCTS tests (Week 9)
-# add_executable(test_mcts tests/test_mcts.cpp)
+# MCTS tests (Week 9) - moved above
 
 # ==================== Benchmark ====================
 
