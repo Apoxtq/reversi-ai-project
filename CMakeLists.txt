@@ -93,10 +93,13 @@ set(NETWORK_SOURCES
     src/network/NetworkGame.cpp
 )
 
-# 研究评估源文件
+# 研究评估源文件 (Week 10)
 set(RESEARCH_SOURCES
     # 性能测试框架
     src/research/benchmark/Benchmark.cpp
+    src/research/benchmark/MatchEngine.cpp
+    src/research/benchmark/Statistics.cpp
+    src/research/benchmark/PositionSuite.cpp
     # src/research/AlgorithmComparison.cpp  # Week 10-11
 )
 
@@ -140,6 +143,21 @@ if(UI_SOURCES AND SFML_FOUND)
     endif()
 endif()
 
+# 研究评估库 (Week 10)
+if(RESEARCH_SOURCES)
+    add_library(reversi_research STATIC ${RESEARCH_SOURCES})
+    target_include_directories(reversi_research PUBLIC 
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/research
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+    )
+    if(TARGET reversi_core)
+        target_link_libraries(reversi_research PUBLIC reversi_core)
+    endif()
+    if(TARGET reversi_ai_lib)
+        target_link_libraries(reversi_research PUBLIC reversi_ai_lib)
+    endif()
+endif()
+
 # 网络库（依赖 SFML Network）
 if(NETWORK_SOURCES AND SFML_FOUND)
     add_library(reversi_network STATIC ${NETWORK_SOURCES})
@@ -152,20 +170,6 @@ if(NETWORK_SOURCES AND SFML_FOUND)
     )
     if(TARGET reversi_core)
         target_link_libraries(reversi_network PUBLIC reversi_core)
-    endif()
-endif()
-
-# 研究评估库
-if(RESEARCH_SOURCES)
-    add_library(reversi_research STATIC ${RESEARCH_SOURCES})
-    target_include_directories(reversi_research PUBLIC 
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/research
-    )
-    if(TARGET reversi_core)
-        target_link_libraries(reversi_research PUBLIC reversi_core)
-    endif()
-    if(TARGET reversi_ai)
-        target_link_libraries(reversi_research PUBLIC reversi_ai)
     endif()
 endif()
 
@@ -266,6 +270,12 @@ if(TARGET reversi_ai_lib)
     
     # Week 9 tests - MCTS engine
     add_executable(test_mcts tests/test_mcts.cpp)
+    
+    # Week 10: Benchmark framework tests
+    add_executable(test_benchmark_week10 tests/test_benchmark_week10.cpp)
+    target_link_libraries(test_benchmark_week10 PRIVATE 
+        reversi_core reversi_ai_lib reversi_research
+    )
     target_link_libraries(test_mcts PRIVATE reversi_core reversi_ai_lib)
     target_include_directories(test_mcts PRIVATE 
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -289,6 +299,21 @@ if(TARGET reversi_ai_lib)
     target_include_directories(bench_week6 PRIVATE 
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/tests
+    )
+endif()
+
+# Week 10: Benchmark experiments
+if(TARGET reversi_research)
+    # Minimax vs MCTS comparison
+    add_executable(minimax_vs_mcts src/research/minimax_vs_mcts.cpp)
+    target_link_libraries(minimax_vs_mcts PRIVATE 
+        reversi_core reversi_ai_lib reversi_research
+    )
+    
+    # Difficulty level testing
+    add_executable(difficulty_test src/research/difficulty_test.cpp)
+    target_link_libraries(difficulty_test PRIVATE 
+        reversi_core reversi_ai_lib reversi_research
     )
 endif()
 
