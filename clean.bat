@@ -29,6 +29,32 @@ if exist reversi_ai.exe (
     del /q reversi_ai.exe
 )
 
+if exist ai_demo.exe (
+    echo - Removing ai_demo.exe
+    del /q ai_demo.exe
+)
+
+if exist reversi_ui_app.exe (
+    echo - Removing reversi_ui_app.exe
+    del /q reversi_ui_app.exe
+)
+
+REM Remove MinGW runtime DLLs (not needed if using static linking)
+if exist libgcc_s_seh-1.dll (
+    echo - Removing libgcc_s_seh-1.dll
+    del /q libgcc_s_seh-1.dll
+)
+
+if exist libstdc++-6.dll (
+    echo - Removing libstdc++-6.dll
+    del /q libstdc++-6.dll
+)
+
+if exist libwinpthread-1.dll (
+    echo - Removing libwinpthread-1.dll
+    del /q libwinpthread-1.dll
+)
+
 REM Remove object files
 if exist *.o (
     echo - Removing *.o files

@@ -22,6 +22,11 @@
 #include <chrono>
 #include <queue>
 
+// Undefine Windows ERROR macro to avoid conflict with enum value
+#ifdef ERROR
+#undef ERROR
+#endif
+
 namespace reversi {
 namespace network {
 
@@ -34,7 +39,7 @@ enum class NetworkGameState {
     CONNECTED,      // Connected, waiting for game start
     PLAYING,        // Game in progress
     SYNCING,        // State synchronization in progress
-    ERROR           // Error state
+    ERROR_STATE     // Error state (renamed to avoid Windows ERROR macro)
 };
 
 /**

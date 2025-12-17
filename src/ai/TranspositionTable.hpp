@@ -114,7 +114,7 @@ public:
      * - Entry exists (hash != 0)
      * - Hash matches (collision detection)
      */
-    TTEntry* probe(uint64_t hash);
+    TTEntry* probe(uint64_t hash) const;
     
     /**
      * @brief Store entry in table
@@ -188,8 +188,8 @@ private:
     std::vector<TTEntry> table_;  ///< Hash table
     size_t size_mask_;            ///< Mask for fast modulo (size - 1)
     size_t entries_;              ///< Number of stored entries
-    size_t hits_;                 ///< Cache hits
-    size_t misses_;               ///< Cache misses
+    mutable size_t hits_;         ///< Cache hits (mutable for const probe)
+    mutable size_t misses_;       ///< Cache misses (mutable for const probe)
 };
 
 } // namespace reversi::ai

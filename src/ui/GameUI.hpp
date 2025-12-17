@@ -18,19 +18,13 @@
 #include "MenuSystem.hpp"
 #include "EventHandler.hpp"
 #include "UIComponent.hpp"
+#include "AnimationSystem.hpp"
 #include "../network/NetworkGame.hpp"
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/System/Clock.hpp>
 #include <memory>
 #include <future>
 #include <optional>
-
-// Forward declarations
-namespace reversi {
-namespace ui {
-    class AnimationSystem;
-}
-}
 
 namespace reversi {
 namespace ui {
@@ -125,7 +119,7 @@ private:
     std::unique_ptr<Button> play_again_button_;
     
     // Animation system
-    std::unique_ptr<class AnimationSystem> animation_system_;
+    std::unique_ptr<AnimationSystem> animation_system_;
     
     // Network game (Week 8)
     std::unique_ptr<network::NetworkGame> network_game_;

@@ -40,7 +40,7 @@ bool TCPSocket::listen(unsigned short port) {
     
     sf::Socket::Status status = listener_->listen(port);
     if (status != sf::Socket::Done) {
-        set_state(State::ERROR);
+        set_state(State::ERROR_STATE);
         last_error_ = "Failed to start listening";
         return false;
     }
@@ -82,7 +82,7 @@ bool TCPSocket::accept(unsigned int timeout_ms) {
         // Non-blocking, not ready yet
         return false;
     } else {
-        set_state(State::ERROR);
+        set_state(State::ERROR_STATE);
         last_error_ = "Failed to accept connection";
         return false;
     }
@@ -105,9 +105,9 @@ bool TCPSocket::connect(const std::string& address, unsigned short port,
     
     socket_->setBlocking(timeout_ms > 0);
     
-    sf::IpAddress ip_address;
-    if (!ip_address.fromString(address)) {
-        set_state(State::ERROR);
+    sf::IpAddress ip_address(address);
+    if (ip_address == sf::IpAddress::None) {
+        set_state(State::ERROR_STATE);
         last_error_ = "Invalid IP address: " + address;
         return false;
     }
@@ -121,7 +121,7 @@ bool TCPSocket::connect(const std::string& address, unsigned short port,
         set_state(State::CONNECTED);
         return true;
     } else {
-        set_state(State::ERROR);
+        set_state(State::ERROR_STATE);
         last_error_ = "Failed to connect to " + address + ":" + std::to_string(port);
         return false;
     }

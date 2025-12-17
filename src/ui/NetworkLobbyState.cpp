@@ -10,6 +10,7 @@
 
 #include "NetworkLobbyState.hpp"
 #include "UIStyle.hpp"
+#include <iostream>
 #include <SFML/Graphics.hpp>
 #include <algorithm>
 #include <chrono>
@@ -109,7 +110,7 @@ std::unique_ptr<MenuState> NetworkLobbyState::get_next_state() {
 
 bool NetworkLobbyState::is_finished() const {
     return connection_result_.success || 
-           network_state_ == network::NetworkGameState::ERROR;
+           network_state_ == network::NetworkGameState::ERROR_STATE;
 }
 
 void NetworkLobbyState::setup_create_room_ui() {
@@ -252,7 +253,7 @@ void NetworkLobbyState::render_join_room(sf::RenderTarget& target) {
     }
 }
 
-bool NetworkLobbyState::handle_keyboard_input(const sf::Event::KeyEvent& event) {
+void NetworkLobbyState::handle_keyboard_input(const sf::Event::KeyEvent& event) {
     if (mode_ == Mode::JOIN_ROOM) {
         if (event.code == sf::Keyboard::BackSpace) {
             if (current_input_box_ > 0 && room_code_input_[current_input_box_] == '\0') {
@@ -260,14 +261,10 @@ bool NetworkLobbyState::handle_keyboard_input(const sf::Event::KeyEvent& event) 
             }
             room_code_input_[current_input_box_] = '\0';
             update_input_boxes();
-            return true;
         } else if (event.code == sf::Keyboard::Enter && all_boxes_filled_) {
             handle_join_room();
-            return true;
         }
     }
-    
-    return false;
 }
 
 void NetworkLobbyState::handle_text_input(const sf::Event::TextEvent& event) {

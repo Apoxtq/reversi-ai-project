@@ -14,6 +14,7 @@
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/Font.hpp>
 #include <string>
+#include <cstdint>
 
 namespace reversi {
 namespace ui {
@@ -29,31 +30,31 @@ namespace UIStyle {
     // Follows UI_UX_Design_Specification.md Section 5.1
     
     // Background Layers
-    inline constexpr sf::Color BACKGROUND_L1{0x1a, 0x1a, 0x1a};  // #1a1a1a - Base background
-    inline constexpr sf::Color BACKGROUND_L2{0x25, 0x25, 0x25};  // #252525 - Panel background
-    inline constexpr sf::Color BACKGROUND_L3{0x30, 0x30, 0x30};  // #303030 - Elevated panels
+    inline const sf::Color BACKGROUND_L1{0x1a, 0x1a, 0x1a};  // #1a1a1a - Base background
+    inline const sf::Color BACKGROUND_L2{0x25, 0x25, 0x25};  // #252525 - Panel background
+    inline const sf::Color BACKGROUND_L3{0x30, 0x30, 0x30};  // #303030 - Elevated panels
     
     // Board Colors
-    inline constexpr sf::Color BOARD_DARK{0x2d, 0x5a, 0x3d};     // #2d5a3d - Dark green squares
-    inline constexpr sf::Color BOARD_LIGHT{0x35, 0x70, 0x45};    // #357045 - Light green squares
-    inline constexpr sf::Color BOARD_BORDER{0x1a, 0x3a, 0x2a};   // #1a3a2a - Grid lines
+    inline const sf::Color BOARD_DARK{0x2d, 0x5a, 0x3d};     // #2d5a3d - Dark green squares
+    inline const sf::Color BOARD_LIGHT{0x35, 0x70, 0x45};    // #357045 - Light green squares
+    inline const sf::Color BOARD_BORDER{0x1a, 0x3a, 0x2a};   // #1a3a2a - Grid lines
     
     // Player Colors
-    inline constexpr sf::Color DISC_BLACK{0x1a, 0x1a, 0x1a};     // #1a1a1a - Black disc
-    inline constexpr sf::Color DISC_WHITE{0xe8, 0xe8, 0xe8};     // #e8e8e8 - White disc
+    inline const sf::Color DISC_BLACK{0x1a, 0x1a, 0x1a};     // #1a1a1a - Black disc
+    inline const sf::Color DISC_WHITE{0xe8, 0xe8, 0xe8};     // #e8e8e8 - White disc
     
     // Accent Colors
-    inline constexpr sf::Color ACCENT_GREEN{0x4a, 0x9d, 0x5f};   // #4a9d5f - Primary accent
-    inline constexpr sf::Color SUCCESS{0x5c, 0xb8, 0x5c};         // #5cb85c - Success/confirmation
-    inline constexpr sf::Color WARNING{0xf0, 0xad, 0x4e};         // #f0ad4e - Warnings/alerts
-    inline constexpr sf::Color ERROR_RED{0xd9, 0x53, 0x4f};       // #d9534f - Errors/danger
-    inline constexpr sf::Color INFO{0x5b, 0xc0, 0xde};           // #5bc0de - Informational
+    inline const sf::Color ACCENT_GREEN{0x4a, 0x9d, 0x5f};   // #4a9d5f - Primary accent
+    inline const sf::Color SUCCESS{0x5c, 0xb8, 0x5c};         // #5cb85c - Success/confirmation
+    inline const sf::Color WARNING{0xf0, 0xad, 0x4e};         // #f0ad4e - Warnings/alerts
+    inline const sf::Color ERROR_RED{0xd9, 0x53, 0x4f};       // #d9534f - Errors/danger
+    inline const sf::Color INFO{0x5b, 0xc0, 0xde};           // #5bc0de - Informational
     
     // Text Colors
-    inline constexpr sf::Color TEXT_PRIMARY{0xe0, 0xe0, 0xe0};    // #e0e0e0 - Main text
-    inline constexpr sf::Color TEXT_SECONDARY{0xa0, 0xa0, 0xa0};  // #a0a0a0 - Subtitles
-    inline constexpr sf::Color TEXT_DISABLED{0x60, 0x60, 0x60};   // #606060 - Inactive text
-    inline constexpr sf::Color TEXT_HIGHLIGHT{0xff, 0xff, 0xff};   // #ffffff - Emphasized text
+    inline const sf::Color TEXT_PRIMARY{0xe0, 0xe0, 0xe0};    // #e0e0e0 - Main text
+    inline const sf::Color TEXT_SECONDARY{0xa0, 0xa0, 0xa0};  // #a0a0a0 - Subtitles
+    inline const sf::Color TEXT_DISABLED{0x60, 0x60, 0x60};   // #606060 - Inactive text
+    inline const sf::Color TEXT_HIGHLIGHT{0xff, 0xff, 0xff};   // #ffffff - Emphasized text
     
     // ==================== Typography System ====================
     // Follows UI_UX_Design_Specification.md Section 5.2

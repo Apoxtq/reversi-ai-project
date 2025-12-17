@@ -28,19 +28,19 @@ TranspositionTable::TranspositionTable(int size_bits) {
     misses_ = 0;
 }
 
-TTEntry* TranspositionTable::probe(uint64_t hash) {
+TTEntry* TranspositionTable::probe(uint64_t hash) const {
     // Calculate index: hash & mask (fast modulo)
     size_t index = hash & size_mask_;
-    TTEntry& entry = table_[index];
+    const TTEntry& entry = table_[index];
     
     // Check if entry is valid and matches hash
     if (entry.is_valid() && entry.matches(hash)) {
-        ++hits_;
-        return &entry;
+        ++hits_;  // mutable, can be modified in const method
+        return const_cast<TTEntry*>(&entry);
     }
     
     // Cache miss
-    ++misses_;
+    ++misses_;  // mutable, can be modified in const method
     return nullptr;
 }
 

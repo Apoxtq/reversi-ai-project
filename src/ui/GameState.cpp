@@ -29,9 +29,10 @@ bool GameState::make_move(const core::Move& move, core::Board& board) {
     }
     
     // Validate move
-    auto legal_moves = board.get_legal_moves();
+    std::vector<int> legal_moves;
+    board.get_legal_moves(legal_moves);
     bool is_legal = std::any_of(legal_moves.begin(), legal_moves.end(),
-        [&move](const core::Move& m) { return m.position == move.position; });
+        [&move](int pos) { return pos == move.position; });
     
     if (!is_legal && !move.is_pass()) {
         return false;

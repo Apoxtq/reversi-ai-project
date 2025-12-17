@@ -131,8 +131,12 @@ void GameUI::handle_events() {
                         board_renderer_->set_board(board);
                         
                         // Update legal moves
+                        std::vector<int> legal_positions;
+                        board.get_legal_moves(legal_positions);
                         std::vector<core::Move> legal_moves;
-                        board.get_legal_moves(legal_moves);
+                        for (int pos : legal_positions) {
+                            legal_moves.emplace_back(pos);
+                        }
                         board_renderer_->set_legal_moves(legal_moves);
                     }
                 }
@@ -282,8 +286,12 @@ void GameUI::start_game(GameMode mode, std::unique_ptr<ai::AIStrategy> ai_strate
     // Update board renderer
     if (board_renderer_) {
         board_renderer_->set_board(initial_board);
+        std::vector<int> legal_positions;
+        initial_board.get_legal_moves(legal_positions);
         std::vector<core::Move> legal_moves;
-        initial_board.get_legal_moves(legal_moves);
+        for (int pos : legal_positions) {
+            legal_moves.emplace_back(pos);
+        }
         board_renderer_->set_legal_moves(legal_moves);
     }
     
@@ -362,8 +370,12 @@ void GameUI::process_game_event(const GameEvent& event) {
                 board_renderer_->set_board(board);
                 
                 // Update legal moves
+                std::vector<int> legal_positions;
+                board.get_legal_moves(legal_positions);
                 std::vector<core::Move> legal_moves;
-                board.get_legal_moves(legal_moves);
+                for (int pos : legal_positions) {
+                    legal_moves.emplace_back(pos);
+                }
                 board_renderer_->set_legal_moves(legal_moves);
             }
             break;
@@ -412,10 +424,10 @@ void GameUI::make_move(const core::Move& move) {
     }
     
     // Validate move
-    std::vector<core::Move> legal_moves;
-    board.get_legal_moves(legal_moves);
-    bool is_legal = std::any_of(legal_moves.begin(), legal_moves.end(),
-        [&move](const core::Move& m) { return m.position == move.position; });
+    std::vector<int> legal_positions;
+    board.get_legal_moves(legal_positions);
+    bool is_legal = std::any_of(legal_positions.begin(), legal_positions.end(),
+        [&move](int pos) { return pos == move.position; });
     
     if (!is_legal && !move.is_pass()) {
         // Invalid move - show error
@@ -428,8 +440,12 @@ void GameUI::make_move(const core::Move& move) {
         board_renderer_->set_last_move(move.position);
         
         // Update legal moves
+        std::vector<int> new_legal_positions;
+        board.get_legal_moves(new_legal_positions);
         std::vector<core::Move> new_legal_moves;
-        board.get_legal_moves(new_legal_moves);
+        for (int pos : new_legal_positions) {
+            new_legal_moves.emplace_back(pos);
+        }
         board_renderer_->set_legal_moves(new_legal_moves);
         
         // Check if AI should move
@@ -652,7 +668,7 @@ void GameUI::handle_network_state_change(network::NetworkGameState state) {
         case network::NetworkGameState::DISCONNECTED:
             std::cout << "Network: Disconnected\n";
             break;
-        case network::NetworkGameState::ERROR:
+        case network::NetworkGameState::ERROR_STATE:  // Error state
             std::cerr << "Network: Error state\n";
             break;
         default:
@@ -705,7 +721,11 @@ void GameUI::render_network_status(sf::RenderTarget& target) {
     status_indicator.setPosition(x, y + 5.0f);
     
     // Color based on connection status and RTT
-    if (!connected || state == network::NetworkGameState::ERROR) {
+    // Note: ERROR is a Windows macro, so we use enum value directly
+    using State = network::NetworkGameState;
+    bool is_error = (state == State::DISCONNECTED || 
+                     state == static_cast<State>(6));  // ERROR state (6th enum value)
+    if (!connected || is_error) {
         status_indicator.setFillColor(sf::Color::Red);  // 🔴 Disconnected/Error
     } else if (rtt == 0 || rtt < 50) {
         status_indicator.setFillColor(sf::Color::Green);  // 🟢 LAN (excellent)

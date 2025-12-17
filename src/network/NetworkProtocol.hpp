@@ -137,6 +137,7 @@ private:
      * @brief Get current timestamp in milliseconds
      * @note This is a public utility function for creating messages
      */
+public:
     static uint32_t get_timestamp_ms();
     
     /**

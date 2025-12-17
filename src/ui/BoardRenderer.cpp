@@ -12,6 +12,8 @@
 #include <cmath>
 #include <algorithm>
 #include <SFML/Graphics/RenderStates.hpp>
+#include <SFML/Graphics/RectangleShape.hpp>
+#include <SFML/Graphics/CircleShape.hpp>
 
 namespace reversi {
 namespace ui {
@@ -184,9 +186,14 @@ void BoardRenderer::draw_legal_moves(sf::RenderTarget& target, sf::RenderStates 
 void BoardRenderer::draw_hover_effect(sf::RenderTarget& target, sf::RenderStates states) const {
     if (hovered_cell_ < 0 || hovered_cell_ >= 64) return;
     
-    // Check if hovered cell is a legal move
-    bool is_legal = std::any_of(legal_moves_.begin(), legal_moves_.end(),
-        [this](const core::Move& m) { return m.position == hovered_cell_; });
+    // Check if hovered cell is a legal move (same pattern as draw_legal_moves)
+    bool is_legal = false;
+    for (const auto& move : legal_moves_) {
+        if (move.is_valid() && move.position == hovered_cell_) {
+            is_legal = true;
+            break;
+        }
+    }
     
     if (is_legal) {
         // Draw preview disc

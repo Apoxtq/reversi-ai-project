@@ -40,7 +40,7 @@ public:
         DISCONNECTED,   // Not connected
         CONNECTING,     // Connection in progress
         CONNECTED,      // Connected and ready
-        ERROR           // Connection error
+        ERROR_STATE     // Connection error (renamed to avoid Windows ERROR macro)
     };
     
     /**

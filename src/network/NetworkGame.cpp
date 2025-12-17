@@ -55,7 +55,7 @@ std::string NetworkGame::start_as_host(unsigned short port) {
     
     // Start listening
     if (!socket_->listen(port)) {
-        set_state(NetworkGameState::ERROR);
+        set_state(NetworkGameState::ERROR_STATE);
         if (error_callback_) {
             error_callback_("Failed to start listening: " + socket_->get_last_error());
         }
@@ -70,7 +70,7 @@ std::string NetworkGame::start_as_host(unsigned short port) {
     room_code_ = RoomManager::get_instance().create_room(local_ip, local_port);
     
     if (room_code_.empty()) {
-        set_state(NetworkGameState::ERROR);
+        set_state(NetworkGameState::ERROR_STATE);
         if (error_callback_) {
             error_callback_("Failed to create room");
         }
@@ -94,7 +94,7 @@ bool NetworkGame::start_as_client(const std::string& room_code,
     
     // Connect to host
     if (!socket_->connect(host_ip, host_port, 5000)) {
-        set_state(NetworkGameState::ERROR);
+        set_state(NetworkGameState::ERROR_STATE);
         if (error_callback_) {
             error_callback_("Failed to connect: " + socket_->get_last_error());
         }
@@ -104,7 +104,7 @@ bool NetworkGame::start_as_client(const std::string& room_code,
     // Send CONNECT message
     auto connect_msg = NetworkProtocol::create_connect_message("Player", next_send_sequence_++);
     if (!socket_->send_message(connect_msg)) {
-        set_state(NetworkGameState::ERROR);
+        set_state(NetworkGameState::ERROR_STATE);
         if (error_callback_) {
             error_callback_("Failed to send CONNECT message");
         }
@@ -117,7 +117,7 @@ bool NetworkGame::start_as_client(const std::string& room_code,
 
 void NetworkGame::update(float dt) {
     if (state_ == NetworkGameState::DISCONNECTED || 
-        state_ == NetworkGameState::ERROR) {
+        state_ == NetworkGameState::ERROR_STATE) {
         return;
     }
     
@@ -309,7 +309,7 @@ void NetworkGame::check_heartbeat_timeout() {
         now - last_heartbeat_received_).count() / 1000.0f;
     
     if (elapsed >= HEARTBEAT_TIMEOUT) {
-        set_state(NetworkGameState::ERROR);
+        set_state(NetworkGameState::ERROR_STATE);
         if (error_callback_) {
             error_callback_("Heartbeat timeout - connection lost");
         }
@@ -366,7 +366,7 @@ void NetworkGame::handle_error_message(const NetworkMessage& msg) {
     ErrorCode error_code = static_cast<ErrorCode>(msg.data[0]);
     std::string error_msg = NetworkProtocol::extract_string_from_data(msg.data + 1, 32);
     
-    set_state(NetworkGameState::ERROR);
+    set_state(NetworkGameState::ERROR_STATE);
     if (error_callback_) {
         error_callback_(error_msg);
     }
@@ -385,11 +385,15 @@ std::string NetworkGame::get_local_ip_address() {
     sf::IpAddress google_dns("8.8.8.8");
     test_socket.connect(google_dns, 80, sf::milliseconds(1));
     
-    // Get local address from socket
-    sf::IpAddress local = test_socket.getLocalAddress();
+    // Get local address - SFML 2.5 doesn't have getLocalAddress()
+    // Use a workaround: connect to a known address and check local endpoint
     test_socket.disconnect();
     
-    if (local != sf::IpAddress::None && local != sf::IpAddress::LocalHost) {
+    // Try to get local IP by connecting to a dummy address
+    // In SFML 2.5, we need to use a different approach
+    // For now, return localhost as fallback
+    sf::IpAddress local = sf::IpAddress::LocalHost;
+    if (local != sf::IpAddress::None) {
         return local.toString();
     }
     

@@ -12,6 +12,7 @@
 #pragma once
 
 #include "../core/Board.hpp"
+#include "../core/Move.hpp"
 #include "UIStyle.hpp"
 #include <SFML/Graphics/Drawable.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
