@@ -138,3 +138,6 @@ coverage/
 !src/**/*
 !tests/
 !tests/**/*
+ 
+# Packaging output
+/dist/

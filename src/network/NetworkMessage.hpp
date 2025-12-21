@@ -10,6 +10,7 @@
  */
 
 #pragma once
+# 
 
 #include <cstdint>
 #include <string>
@@ -20,6 +21,15 @@ namespace network {
 /**
  * @brief Network message types
  */
+#if defined(_WIN32)
+// Avoid collision with Windows ERROR macro
+#ifdef ERROR
+#undef ERROR
+#endif
+#ifdef ERROR_MSG
+#undef ERROR_MSG
+#endif
+#endif
 enum class MessageType : uint8_t {
     CONNECT = 0x01,         // Connection request (contains version, player name)
     CONNECT_ACK = 0x02,     // Connection acknowledgment (contains player color, initial board)
@@ -30,7 +40,7 @@ enum class MessageType : uint8_t {
     HEARTBEAT = 0x30,       // Heartbeat message (keep connection alive)
     HEARTBEAT_ACK = 0x31,   // Heartbeat acknowledgment (RTT calculation)
     DISCONNECT = 0x40,      // Disconnect message
-    ERROR = 0xFF            // Error message (version mismatch, etc.)
+    ERROR_MSG = 0xFF        // Error message (version mismatch, etc.)
 };
 
 /**
@@ -91,6 +101,17 @@ enum class ErrorCode : uint8_t {
     ROOM_NOT_FOUND = 0x02,     // Room code not found or expired
     ROOM_FULL = 0x03,          // Room is full (already has 2 players)
     INVALID_MOVE = 0x04,       // Invalid move received
+    STATE_MISMATCH = 0x05,     // Board state mismatch detected
+    CONNECTION_TIMEOUT = 0x06, // Connection timeout
+    UNKNOWN_ERROR = 0xFF       // Unknown error
+};
+
+} // namespace network
+} // namespace reversi
+
+
+
+
     STATE_MISMATCH = 0x05,     // Board state mismatch detected
     CONNECTION_TIMEOUT = 0x06, // Connection timeout
     UNKNOWN_ERROR = 0xFF       // Unknown error

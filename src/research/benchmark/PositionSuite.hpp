@@ -15,6 +15,7 @@
 #include <vector>
 #include <string>
 #include <cstdint>
+#include <random>
 
 namespace reversi {
 namespace research {
@@ -138,30 +139,19 @@ public:
     static std::vector<core::Board> generate_standard_64(uint32_t seed = 0);
     
 private:
-    /**
-     * @brief Play random moves from starting position
-     * 
-     * @param board Starting board
-     * @param num_moves Number of random moves to play
-     * @param rng Random number generator
-     * @return Final board position
-     */
-    static core::Board play_random_moves(
-        const core::Board& board,
-        int num_moves,
-        std::mt19937& rng
-    );
-    
-    /**
-     * @brief Get random legal move
-     * 
-     * @param board Current board
-     * @param rng Random number generator
-     * @return Random legal move position, or -1 if no moves
+    // Internal helpers implemented in PositionSuite.cpp (not exposed here to avoid
+    // depending on <random> in the header).
+};
+
+} // namespace research
+} // namespace reversi
+
+
      */
     static int get_random_move(const core::Board& board, std::mt19937& rng);
 };
 
 } // namespace research
 } // namespace reversi
+
 

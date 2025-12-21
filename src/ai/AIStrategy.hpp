@@ -40,7 +40,9 @@ struct SearchStats {
     int time_elapsed_ms = 0;
     double nodes_per_second = 0.0;
     
-    void reset() {
+    virtual ~SearchStats() = default;
+    
+    virtual void reset() {
         nodes_searched = 0;
         depth_reached = 0;
         time_elapsed_ms = 0;

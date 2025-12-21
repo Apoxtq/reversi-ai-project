@@ -25,45 +25,95 @@ NetworkLobbyState::NetworkLobbyState(Mode mode)
     room_code_input_.fill('\0');
     
     // Load font with fallback mechanism
+    try {
     font_ = std::make_unique<sf::Font>();
+    } catch (const std::exception& e) {
+        std::cerr << "Error: Failed to create font object: " << e.what() << "\n";
+        font_.reset();  // Ensure font_ is nullptr on failure
+        // Continue without font - UI will use fallback rendering
+    }
+    
+    bool font_loaded = false;
+    
+    if (!font_) {
+        std::cerr << "Warning: Font object creation failed. Text rendering will be disabled.\n";
+        // Continue without font - UI will use fallback rendering
+    } else {
     
     // Try to load primary font
-    bool font_loaded = font_->loadFromFile("fonts/Roboto-Regular.ttf");
+    try {
+        if (font_->loadFromFile("fonts/Roboto-Regular.ttf")) {
+            font_loaded = true;
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: Failed to load font from fonts/Roboto-Regular.ttf: " << e.what() << "\n";
+        font_loaded = false;
+    } catch (...) {
+        font_loaded = false;
+    }
     
     // Fallback: Try alternative font paths
     if (!font_loaded) {
-        font_loaded = font_->loadFromFile("assets/fonts/Roboto-Regular.ttf");
+        try {
+            if (font_->loadFromFile("assets/fonts/Roboto-Regular.ttf")) {
+                font_loaded = true;
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "Warning: Failed to load font from assets/fonts/Roboto-Regular.ttf: " << e.what() << "\n";
+            font_loaded = false;
+        } catch (...) {
+            font_loaded = false;
+        }
     }
     
     // Fallback: Try system fonts (Windows)
     #ifdef _WIN32
     if (!font_loaded) {
-        // Try common Windows font paths
         const char* system_fonts[] = {
             "C:/Windows/Fonts/arial.ttf",
             "C:/Windows/Fonts/calibri.ttf",
-            "C:/Windows/Fonts/segoeui.ttf"
+            "C:/Windows/Fonts/segoeui.ttf",
+            "C:/Windows/Fonts/tahoma.ttf"
         };
         for (const char* font_path : system_fonts) {
-            if (font_->loadFromFile(font_path)) {
+            try {
+                if (font_ && font_->loadFromFile(font_path)) {
                 font_loaded = true;
+                    std::cout << "Loaded system font: " << font_path << "\n";
                 break;
+                }
+            } catch (const std::exception& e) {
+                // Continue to next font
+                continue;
+            } catch (...) {
+                continue;
             }
         }
     }
     #endif
     
-    // Final fallback: Use SFML's default font capability
-    // Note: SFML doesn't provide a default font, but we can handle gracefully
+    // Final fallback: Log warning but continue without font
     if (!font_loaded) {
-        std::cerr << "Warning: Could not load font. Text rendering may be limited.\n";
-        // Font will be nullptr, but we check for this in rendering code
+            std::cerr << "Warning: Could not load any font. Text rendering will be disabled.\n";
+            std::cerr << "The application will continue but text may not be displayed.\n";
+        // Font object exists but is empty - rendering code checks font_->getInfo().family.empty()
+        } else {
+            std::cout << "Font loaded successfully.\n";
+        }
     }
     
+    // Setup UI (works even without font)
+    try {
     if (mode_ == Mode::CREATE_ROOM) {
         setup_create_room_ui();
     } else {
         setup_join_room_ui();
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: Failed to setup UI: " << e.what() << "\n";
+        // Continue - basic functionality may still work
+    } catch (...) {
+        std::cerr << "Warning: Unknown error during UI setup.\n";
     }
 }
 
@@ -150,9 +200,20 @@ void NetworkLobbyState::render_create_room(sf::RenderTarget& target) {
     // Render create room UI
     // This is a simplified version - full implementation would use UIComponent system
     
-    // Check if font is loaded (font_->getInfo().family will be empty if not loaded)
-    if (!font_ || font_->getInfo().family.empty()) {
-        // Font not loaded - render basic UI without text
+    // Safe font check: ensure font_ is not nullptr before accessing
+    bool font_available = false;
+    if (font_) {
+        try {
+            // Check if font is loaded by checking if family is not empty
+            font_available = !font_->getInfo().family.empty();
+        } catch (...) {
+            // If getInfo() throws, font is not available
+            font_available = false;
+        }
+    }
+    
+    // If font not available, render basic UI without text
+    if (!font_available) {
         // Draw room code as colored boxes instead
         if (!room_code_.empty()) {
             float start_x = 100;
@@ -172,6 +233,8 @@ void NetworkLobbyState::render_create_room(sf::RenderTarget& target) {
         return;
     }
     
+    // Font is available - render text
+    try {
     // Title
     sf::Text title("Create Room", *font_, 48);
     title.setPosition(100, 50);
@@ -187,29 +250,37 @@ void NetworkLobbyState::render_create_room(sf::RenderTarget& target) {
         target.draw(code_text);
         
         // Status message
+            if (!status_message_.empty()) {
         sf::Text status(status_message_, *font_, 24);
         status.setPosition(100, 300);
         status.setFillColor(sf::Color::Yellow);
         target.draw(status);
+            }
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Error rendering text: " << e.what() << "\n";
+        // Fall back to non-text rendering
+    } catch (...) {
+        std::cerr << "Unknown error rendering text.\n";
     }
 }
 
 void NetworkLobbyState::render_join_room(sf::RenderTarget& target) {
     // Render join room UI
-    // Check if font is loaded
-    if (!font_ || font_->getInfo().family.empty()) {
-        // Font not loaded - render basic UI without text
-        // Input boxes will still work, just without text labels
-        return;
+    
+    // Safe font check: ensure font_ is not nullptr before accessing
+    bool font_available = false;
+    if (font_) {
+        try {
+            // Check if font is loaded by checking if family is not empty
+            font_available = !font_->getInfo().family.empty();
+        } catch (...) {
+            // If getInfo() throws, font is not available
+            font_available = false;
+        }
     }
     
-    // Title
-    sf::Text title("Join Room", *font_, 48);
-    title.setPosition(100, 50);
-    title.setFillColor(sf::Color::White);
-    target.draw(title);
-    
-    // Input boxes (6 boxes for room code)
+    // Input boxes (6 boxes for room code) - always render these
     float start_x = 100;
     float start_y = 200;
     float box_size = 60;
@@ -223,27 +294,52 @@ void NetworkLobbyState::render_join_room(sf::RenderTarget& target) {
         box.setOutlineThickness(2);
         target.draw(box);
         
-        // Character in box (only if font is loaded)
-        if (room_code_input_[i] != '\0' && font_ && !font_->getInfo().family.empty()) {
+        // Character in box
+        if (room_code_input_[i] != '\0') {
+            if (font_available) {
+                try {
             sf::Text char_text(std::string(1, room_code_input_[i]), *font_, 36);
             char_text.setPosition(start_x + i * (box_size + spacing) + 15, start_y + 10);
             char_text.setFillColor(sf::Color::White);
             target.draw(char_text);
-        } else if (room_code_input_[i] != '\0') {
+                } catch (...) {
+                    // Fallback: Draw filled box to indicate character entered
+                    sf::RectangleShape filled_box(sf::Vector2f(box_size - 10, box_size - 10));
+                    filled_box.setPosition(start_x + i * (box_size + spacing) + 5, start_y + 5);
+                    filled_box.setFillColor(sf::Color::White);
+                    target.draw(filled_box);
+                }
+            } else {
             // Fallback: Draw filled box to indicate character entered
             sf::RectangleShape filled_box(sf::Vector2f(box_size - 10, box_size - 10));
             filled_box.setPosition(start_x + i * (box_size + spacing) + 5, start_y + 5);
             filled_box.setFillColor(sf::Color::White);
             target.draw(filled_box);
         }
+        }
     }
     
-    // Status message (only if font is loaded)
-    if (!status_message_.empty() && font_ && !font_->getInfo().family.empty()) {
+    // Render title and status message if font is available
+    if (font_available) {
+        try {
+            // Title
+            sf::Text title("Join Room", *font_, 48);
+            title.setPosition(100, 50);
+            title.setFillColor(sf::Color::White);
+            target.draw(title);
+            
+            // Status message
+            if (!status_message_.empty()) {
         sf::Text status(status_message_, *font_, 24);
         status.setPosition(100, 300);
         status.setFillColor(get_network_status_color());
         target.draw(status);
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "Error rendering text: " << e.what() << "\n";
+        } catch (...) {
+            std::cerr << "Unknown error rendering text.\n";
+        }
     } else if (!status_message_.empty()) {
         // Fallback: Draw colored indicator for status
         sf::CircleShape status_indicator(8.0f);

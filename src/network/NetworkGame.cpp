@@ -277,7 +277,7 @@ void NetworkGame::process_received_messages() {
             case MessageType::DISCONNECT:
                 set_state(NetworkGameState::DISCONNECTED);
                 break;
-            case MessageType::ERROR:  // ERROR = 0xFF
+            case MessageType::ERROR_MSG:  // ERROR_MSG = 0xFF
                 handle_error_message(msg);
                 break;
             default:

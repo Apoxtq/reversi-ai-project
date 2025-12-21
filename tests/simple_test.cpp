@@ -3,7 +3,7 @@
  * COMP390 Honours Year Project
  */
 
-#include "core/Board.hpp"
+#include "../src/core/Board.hpp"
 #include <iostream>
 #include <vector>
 

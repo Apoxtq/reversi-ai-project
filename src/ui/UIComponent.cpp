@@ -14,9 +14,38 @@
 #include <SFML/Graphics/Text.hpp>
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 
 namespace reversi {
 namespace ui {
+
+// Static font for all buttons
+static sf::Font g_button_font;
+static bool g_font_loaded = false;
+
+// Load font on first use
+static void ensure_font_loaded() {
+    if (g_font_loaded) return;
+    
+    // Try multiple font paths
+    std::vector<std::string> font_paths = {
+        "fonts/Roboto-Regular.ttf",
+        "fonts/arial.ttf",
+        "fonts/segoeui.ttf",
+        "C:/Windows/Fonts/arial.ttf",
+        "C:/Windows/Fonts/segoeui.ttf"
+    };
+    
+    for (const auto& path : font_paths) {
+        if (g_button_font.loadFromFile(path)) {
+            g_font_loaded = true;
+            std::cout << "Loaded font from: " << path << std::endl;
+            return;
+        }
+    }
+    
+    std::cerr << "WARNING: Failed to load any font!" << std::endl;
+}
 
 // ==================== Button Implementation ====================
 
@@ -29,6 +58,7 @@ Button::Button(const std::string& text,
     , size_(size)
     , style_(style)
 {
+    ensure_font_loaded();
 }
 
 void Button::draw(sf::RenderTarget& target, sf::RenderStates states) const {
@@ -65,11 +95,22 @@ void Button::draw(sf::RenderTarget& target, sf::RenderStates states) const {
     
     target.draw(background, states);
     
-    // Draw text (placeholder - would need font loading)
-    // sf::Text text_obj(text_, font, UIStyle::FONT_BUTTON);
-    // text_obj.setPosition(position_ + sf::Vector2f(SPACING_MD, SPACING_MD));
-    // text_obj.setFillColor(enabled_ ? UIStyle::TEXT_PRIMARY : UIStyle::TEXT_DISABLED);
-    // target.draw(text_obj, states);
+    // Draw text
+    if (g_font_loaded && !text_.empty()) {
+        sf::Text text_obj;
+        text_obj.setFont(g_button_font);
+        text_obj.setString(text_);
+        text_obj.setCharacterSize(UIStyle::FONT_BUTTON);
+        text_obj.setFillColor(enabled_ ? UIStyle::TEXT_PRIMARY : UIStyle::TEXT_DISABLED);
+        
+        // Center text in button
+        sf::FloatRect text_bounds = text_obj.getLocalBounds();
+        text_obj.setOrigin(text_bounds.left + text_bounds.width / 2.0f,
+                          text_bounds.top + text_bounds.height / 2.0f);
+        text_obj.setPosition(position_ + size_ / 2.0f);
+        
+        target.draw(text_obj, states);
+    }
 }
 
 bool Button::handle_event(const sf::Event& event) {

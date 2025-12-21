@@ -32,13 +32,13 @@ TTEntry* TranspositionTable::probe(uint64_t hash) const {
     // Calculate index: hash & mask (fast modulo)
     size_t index = hash & size_mask_;
     const TTEntry& entry = table_[index];
-    
-    // Check if entry is valid and matches hash
-    if (entry.is_valid() && entry.matches(hash)) {
+    // Fast pre-check using low 32-bits to avoid full 64-bit compare on most misses.
+    uint32_t low = static_cast<uint32_t>(hash & 0xFFFFFFFFu);
+    if (entry.hash_low == low && entry.hash == hash && entry.hash != 0) {
         ++hits_;  // mutable, can be modified in const method
         return const_cast<TTEntry*>(&entry);
     }
-    
+
     // Cache miss
     ++misses_;  // mutable, can be modified in const method
     return nullptr;
@@ -62,6 +62,8 @@ void TranspositionTable::store(const TTEntry& entry) {
         (existing.depth == entry.depth && !existing.matches(entry.hash))) {
         // Replace entry
         existing = entry;
+        // Maintain low-32 pre-check field for faster probes
+        existing.hash_low = static_cast<uint32_t>(entry.hash & 0xFFFFFFFFu);
         
         // Update entry count (only count new entries)
         if (was_empty) {

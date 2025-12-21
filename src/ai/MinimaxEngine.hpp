@@ -62,6 +62,35 @@ public:
         bool use_aspiration = false; ///< Enable aspiration windows
         bool use_killer_moves = false; ///< Enable killer move heuristics
         int aspiration_window = 50;  ///< Aspiration window size (centipawns)
+        // Tunable parameters (runtime)
+        int pvs_research_margin = 4; ///< Margin to trigger full re-search after zero-window
+        int tt_weight = 10583;        ///< Weight for TT best-move in ordering
+        int killer_weight = 195;      ///< Weight multiplier for killer bonus
+        int pos_weight_mul = 8;       ///< Multiplier for positional weights in ordering
+        int flip_mul = 4;             ///< Multiplier for flip count in ordering
+        int history_weight = 0;       ///< Weight for history heuristic
+        int top_k_root = 1;           ///< Number of top candidates to refine at root
+        int pvs_failure_threshold = 4; ///< Per-ply threshold to disable PVS at that ply
+        // Preset: optimized candidate from param_opt
+        static Config preset_optimized() {
+            Config c;
+            c.pvs_research_margin = 1;
+            c.aspiration_window = 64;
+            c.killer_weight = 25;
+            c.tt_weight = 3708;
+            c.history_weight = 0;
+            return c;
+        }
+        
+        static Config preset_fixed_found() {
+            Config c;
+            c.pvs_research_margin = 20;
+            c.aspiration_window = 50;
+            c.killer_weight = 0;
+            c.tt_weight = 6000;
+            c.history_weight = 0;
+            return c;
+        }
         
         Config() = default;
         Config(int depth, bool ab = true, bool tt = true, int tt_bits = 20) 
@@ -175,6 +204,23 @@ public:
         tt_.clear();
     }
     
+    /**
+     * @brief Diagnostics for PVS behavior
+     */
+    struct PVSDiagnostics {
+        int zero_window_failures = 0;
+        int researches = 0;
+        int zero_window_beta_cutoffs = 0;
+        std::vector<int> failures_per_ply;
+        std::vector<int> researches_per_ply;
+        std::vector<int> beta_cutoffs_per_ply;
+    };
+    
+    /**
+     * @brief Get PVS diagnostics collected during the last search
+     */
+    PVSDiagnostics get_pvs_diagnostics() const;
+    
 private:
     // Constants
     static constexpr int MAX_DEPTH = 64;  ///< Maximum search depth (game has 64 squares)
@@ -183,6 +229,10 @@ private:
     Config config_;           ///< Search configuration
     TranspositionTable tt_;   ///< Transposition table
     int nodes_searched_ = 0;  ///< Node counter (reset each search)
+    
+    // Reusable scratch vectors to avoid repeated allocations in hot paths
+    mutable std::vector<int> moves_scratch_;
+    mutable std::vector<std::pair<int,int>> move_scores_scratch_;
     
     // AIStrategy interface: last search statistics
     mutable SearchStats last_stats_;  ///< Statistics from last search
@@ -196,6 +246,19 @@ private:
     std::array<int, MAX_DEPTH> killer1_;  ///< First killer move at each ply
     std::array<int, MAX_DEPTH> killer2_;  ///< Second killer move at each ply
     int current_ply_ = 0;  ///< Current search ply (for killer moves)
+    
+    // History heuristic: accumulates successful moves to guide ordering
+    mutable std::array<int, 64> history_table_;
+    
+    // Diagnostics for PVS behavior (used to tune ordering)
+    int pvs_zero_window_failures_ = 0; ///< Count zero-window failures requiring re-search
+    int pvs_researches_ = 0;           ///< Count full-window re-searches after zero-window
+    int pvs_zero_window_beta_cutoffs_ = 0; ///< Count of beta cutoffs triggered by zero-window
+    
+    // Per-ply diagnostics
+    std::array<int, MAX_DEPTH> pvs_zero_window_failures_per_ply_;
+    std::array<int, MAX_DEPTH> pvs_researches_per_ply_;
+    std::array<int, MAX_DEPTH> pvs_zero_window_beta_cutoffs_per_ply_;
     
     /**
      * @brief Negamax search with alpha-beta pruning
@@ -262,6 +325,7 @@ private:
      */
     int calculate_time_limit(const reversi::core::Board& board, int total_time_ms) const;
     
+    
     /**
      * @brief Check if time limit has been exceeded
      * 
@@ -276,6 +340,20 @@ private:
      * @param ply Current search ply
      */
     void update_killer(int move, int ply);
+    
+    /**
+     * @brief Update history heuristic for move ordering
+     * @param move Move index (0-63)
+     * @param depth Depth at which cutoff occurred
+     */
+    void update_history(int move, int depth);
+    
+    /**
+     * @brief Apply decay to the history table to avoid unbounded growth.
+     * This should be called periodically (e.g., once per move search) to
+     * slowly forget old history entries.
+     */
+    void decay_history();
     
     /**
      * @brief Get killer move bonus for move ordering

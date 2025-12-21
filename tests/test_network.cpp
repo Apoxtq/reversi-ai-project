@@ -16,6 +16,7 @@
 #include "../src/core/Move.hpp"
 #include <iostream>
 #include <cassert>
+#include <bit>
 
 using namespace reversi;
 using namespace reversi::network;
@@ -140,7 +141,7 @@ void test_board_hash_usage() {
         // If position 28 is not valid, try a valid move
         uint64_t legal = board1.legal_moves();
         if (legal != 0) {
-            int pos = __builtin_ctzll(legal);  // Get first valid move
+            int pos = static_cast<int>(std::countr_zero(legal));  // Get first valid move (C++20)
             board1.make_move(pos);
             uint64_t hash2 = board1.hash();
             assert(hash1 != hash2);

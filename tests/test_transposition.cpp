@@ -13,7 +13,7 @@
 #include "test_utils.hpp"
 #include "ai/TranspositionTable.hpp"
 #include "ai/MinimaxEngine.hpp"
-#include "core/Board.hpp"
+#include "../src/core/Board.hpp"
 #include <iostream>
 #include <iomanip>
 #include <vector>
@@ -61,7 +61,7 @@ void test_basic_store_retrieve() {
     ASSERT_EQ(retrieved->flag, entry.flag);
     ASSERT_EQ(retrieved->best_move, entry.best_move);
     
-    std::cout << GREEN << "✓ Basic store/retrieve works\n" << RESET;
+    std::cout << GREEN << "[OK] Basic store/retrieve works\n" << RESET;
 }
 
 /**
@@ -92,7 +92,7 @@ void test_hash_collision() {
     TTEntry* retrieved2 = tt.probe(0x2000);
     ASSERT_TRUE(retrieved2 == nullptr || !retrieved2->matches(0x2000));
     
-    std::cout << GREEN << "✓ Hash collision detection works\n" << RESET;
+        std::cout << GREEN << "[OK] Hash collision detection works\n" << RESET;
 }
 
 /**
@@ -126,7 +126,7 @@ void test_depth_preferred_replacement() {
     TTEntry* retrieved = tt.probe(0x2000);
     if (retrieved && retrieved->matches(0x2000)) {
         ASSERT_EQ(retrieved->depth, 5);
-        std::cout << GREEN << "✓ Depth-preferred replacement works\n" << RESET;
+        std::cout << GREEN << "[OK] Depth-preferred replacement works\n" << RESET;
     } else {
         // If collision didn't occur, that's also fine
         std::cout << YELLOW << "⚠ No collision occurred (expected with larger tables)\n" << RESET;
@@ -169,7 +169,7 @@ void test_cache_statistics() {
     stats = tt.get_stats();
     ASSERT_GT(stats.misses, 0);
     
-    std::cout << GREEN << "✓ Cache statistics work\n" << RESET;
+    std::cout << GREEN << "[OK] Cache statistics work\n" << RESET;
     std::cout << "  Hits: " << stats.hits << ", Misses: " << stats.misses 
               << ", Hit Rate: " << std::fixed << std::setprecision(2) 
               << stats.hit_rate * 100 << "%\n";
@@ -207,7 +207,7 @@ void test_clear() {
     retrieved = tt.probe(0x1000);
     ASSERT_TRUE(retrieved == nullptr || !retrieved->is_valid());
     
-    std::cout << GREEN << "✓ Clear functionality works\n" << RESET;
+    std::cout << GREEN << "[OK] Clear functionality works\n" << RESET;
 }
 
 /**
@@ -250,7 +250,7 @@ void test_minimax_integration() {
     // Results should be consistent
     ASSERT_TRUE(result2.best_move >= 0);
     
-    std::cout << GREEN << "✓ MinimaxEngine integration works\n" << RESET;
+    std::cout << GREEN << "[OK] MinimaxEngine integration works\n" << RESET;
 }
 
 /**
@@ -301,7 +301,7 @@ void test_performance() {
     
     ASSERT_GT(hits, num_entries * 0.9);  // At least 90% hit rate
     
-    std::cout << GREEN << "✓ Performance test passed\n" << RESET;
+    std::cout << GREEN << "[OK] Performance test passed\n" << RESET;
 }
 
 /**
@@ -334,7 +334,7 @@ void test_move_ordering() {
     std::cout << "  TT Stats: " << stats.hits << " hits, " 
               << stats.misses << " misses\n";
     
-    std::cout << GREEN << "✓ Move ordering works\n" << RESET;
+    std::cout << GREEN << "[OK] Move ordering works\n" << RESET;
 }
 
 int main() {

@@ -6,6 +6,13 @@
 
 ---
 
+## Release v1.1.0 (2025-12-21)
+
+- This release packages the project for reproducible builds and adds packaging scripts and CI artifact support.  
+- See `docs/03_Packaging_and_Release.md` for packaging details and `docs/CHANGELOG.md` for change summary.
+
+---
+
 ## 🚀 快速开始
 
 ### 编译和运行

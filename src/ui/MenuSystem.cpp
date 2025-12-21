@@ -12,6 +12,7 @@
 #include "UIStyle.hpp"
 #include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/Graphics/Text.hpp>
+#include <iostream>
 
 namespace reversi {
 namespace ui {
@@ -19,7 +20,14 @@ namespace ui {
 // ==================== MainMenuState Implementation ====================
 
 MainMenuState::MainMenuState() {
-    create_buttons();
+    try {
+        std::cout << "    [MainMenuState] Creating buttons..." << std::endl;
+        create_buttons();
+        std::cout << "    [MainMenuState] Buttons created successfully" << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "ERROR: Failed to create MainMenuState: " << e.what() << std::endl;
+        throw;
+    }
 }
 
 void MainMenuState::create_buttons() {
@@ -135,36 +143,98 @@ bool MainMenuState::is_finished() const {
 // ==================== MenuSystem Implementation ====================
 
 MenuSystem::MenuSystem() {
-    initialize();
+    // Don't initialize here - let initialize() be called explicitly
+    // This allows for better error handling
 }
 
 void MenuSystem::initialize() {
-    current_state_ = std::make_unique<MainMenuState>();
+    try {
+        std::cout << "  [MenuSystem] Creating MainMenuState..." << std::endl;
+        current_state_ = std::make_unique<MainMenuState>();
+        std::cout << "  [MenuSystem] MainMenuState created successfully" << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "ERROR: Failed to initialize MenuSystem: " << e.what() << std::endl;
+        std::cerr << "Menu system will not be available." << std::endl;
+        // Don't throw - allow application to continue without menu
+        current_state_.reset();
+    } catch (...) {
+        std::cerr << "ERROR: Unknown exception during MenuSystem initialization." << std::endl;
+        current_state_.reset();
+    }
 }
 
 void MenuSystem::update(float dt) {
-    if (current_state_) {
+    if (!current_state_) {
+        return;  // Menu system not initialized
+    }
+    
+    try {
         current_state_->update(dt);
         transition_to_next_state();
+    } catch (const std::exception& e) {
+        std::cerr << "Error in MenuSystem::update: " << e.what() << std::endl;
+    } catch (...) {
+        std::cerr << "Unknown error in MenuSystem::update." << std::endl;
     }
 }
 
 void MenuSystem::render(sf::RenderTarget& target) {
-    if (current_state_) {
+    if (!current_state_) {
+        // Render fallback background if menu system not initialized
+        sf::RectangleShape background(sf::Vector2f(
+            static_cast<float>(target.getSize().x),
+            static_cast<float>(target.getSize().y)
+        ));
+        background.setFillColor(UIStyle::BACKGROUND_L1);
+        target.draw(background);
+        return;
+    }
+    
+    try {
         current_state_->render(target);
+    } catch (const std::exception& e) {
+        std::cerr << "Error in MenuSystem::render: " << e.what() << std::endl;
+        // Render fallback background on error
+        sf::RectangleShape background(sf::Vector2f(
+            static_cast<float>(target.getSize().x),
+            static_cast<float>(target.getSize().y)
+        ));
+        background.setFillColor(UIStyle::BACKGROUND_L1);
+        target.draw(background);
+    } catch (...) {
+        std::cerr << "Unknown error in MenuSystem::render." << std::endl;
     }
 }
 
 void MenuSystem::handle_event(const sf::Event& event) {
-    if (current_state_) {
+    if (!current_state_) {
+        return;  // Menu system not initialized
+    }
+    
+    try {
         current_state_->handle_event(event);
+    } catch (const std::exception& e) {
+        std::cerr << "Error in MenuSystem::handle_event: " << e.what() << std::endl;
+    } catch (...) {
+        std::cerr << "Unknown error in MenuSystem::handle_event." << std::endl;
     }
 }
 
 MainMenuState::Selection MenuSystem::get_selection() const {
+    if (!current_state_) {
+        return MainMenuState::Selection::NONE;
+    }
+    
+    try {
     if (auto* main_menu = dynamic_cast<MainMenuState*>(current_state_.get())) {
         return main_menu->get_selection();
     }
+    } catch (const std::exception& e) {
+        std::cerr << "Error in MenuSystem::get_selection: " << e.what() << std::endl;
+    } catch (...) {
+        std::cerr << "Unknown error in MenuSystem::get_selection." << std::endl;
+    }
+    
     return MainMenuState::Selection::NONE;
 }
 

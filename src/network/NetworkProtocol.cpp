@@ -250,7 +250,7 @@ NetworkMessage NetworkProtocol::create_sync_request_message(const core::Board& b
 NetworkMessage NetworkProtocol::create_error_message(ErrorCode error_code,
                                                       const std::string& error_message,
                                                       uint16_t sequence) {
-    NetworkMessage msg(static_cast<MessageType>(0xFF));  // ERROR = 0xFF
+    NetworkMessage msg(MessageType::ERROR_MSG);
     msg.sequence_number = sequence;
     msg.timestamp_ms = get_timestamp_ms();
     msg.board_hash = 0;
@@ -273,7 +273,8 @@ uint32_t NetworkProtocol::get_timestamp_ms() {
 }
 
 void NetworkProtocol::copy_string_to_data(const std::string& str, uint8_t* data, size_t max_len) {
-    size_t len = std::min(str.length(), max_len - 1);
+    // Use explicit template parameter to avoid macro/overload issues on MSVC
+    size_t len = std::min<size_t>(str.length(), max_len - 1);
     std::memcpy(data, str.c_str(), len);
     data[len] = '\0';  // Null termination
     // Fill remaining bytes with zeros
@@ -293,4 +294,9 @@ std::string NetworkProtocol::extract_string_from_data(const uint8_t* data, size_
 
 } // namespace network
 } // namespace reversi
+
+
+
+
+
 

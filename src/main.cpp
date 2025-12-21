@@ -11,6 +11,7 @@
 #include <iostream>
 #include <string>
 #include <cstdint>
+#include <bit>
 
 // 项目版本信息
 #define PROJECT_VERSION "1.0.0"
@@ -24,8 +25,10 @@ void demonstrateBitboard() {
     uint64_t player = 0x0000000810000000ULL;    // 玩家（白子）
     uint64_t opponent = 0x0000001008000000ULL;  // 对手（黑子）
     
-    std::cout << "Player pieces: " << __builtin_popcountll(player) << std::endl;
-    std::cout << "Opponent pieces: " << __builtin_popcountll(opponent) << std::endl;
+    // Use portable std::popcount (C++20) instead of compiler builtin
+    std::cout << "Player pieces: " << std::popcount(player) << std::endl;
+    std::cout << "Opponent pieces: " << std::popcount(opponent) << std::endl;
+    // Touch: ensure file timestamp updated for rebuild
     
     // 显示棋盘（简化版）
     std::cout << "\nInitial Board State:" << std::endl;
@@ -153,4 +156,8 @@ int main(int argc, char* argv[]) {
     
     return 0;
 }
+
+
+
+
 

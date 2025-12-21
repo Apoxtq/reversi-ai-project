@@ -8,7 +8,7 @@
  * Measures performance of optimized bitboard operations
  */
 
-#include "core/Board.hpp"
+#include "../src/core/Board.hpp"
 #include <iostream>
 #include <iomanip>
 #include <chrono>

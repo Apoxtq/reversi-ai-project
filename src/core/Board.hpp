@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <bit>
 
 namespace reversi {
 namespace core {
@@ -127,6 +128,49 @@ public:
      *  @note Zobrist hashing provides near-perfect hash distribution
      */
     uint64_t hash() const;
+    
+    // ==================== Fast mutation helpers (no history, low-level)
+    /** @brief Get raw player bitboard (for performance-critical code) */
+    uint64_t get_player_bb() const { return player; }
+    /** @brief Get raw opponent bitboard (for performance-critical code) */
+    uint64_t get_opponent_bb() const { return opponent; }
+    /** @brief Set raw player/opponent bitboards (for fast restore) */
+    void set_player_opponent(uint64_t p, uint64_t o) { player = p; opponent = o; hash_cache_ = recompute_hash(player, opponent); }
+    /** @brief Apply move without recording history (fast path for search) */
+    inline void apply_move_no_history(int pos) {
+        if (pos < 0 || pos >= 64) return;
+        uint64_t pos_mask = 1ULL << pos;
+        uint64_t flipped = calc_flip(pos);
+        if (flipped == 0) return;
+
+        uint64_t prev_player = player;
+        uint64_t prev_opponent = opponent;
+
+        player |= pos_mask | flipped;
+        opponent &= ~flipped;
+        std::swap(player, opponent);
+
+        // Incremental Zobrist update using local pointers
+        const uint64_t* zplayer = zobrist_player;
+        const uint64_t* zopponent = zobrist_opponent;
+        uint64_t delta_mask1 = prev_player;
+        uint64_t delta_mask2 = prev_opponent & ~flipped;
+        uint64_t delta_mask = delta_mask1 | delta_mask2;
+        uint64_t delta_xor = 0;
+        while (delta_mask) {
+            int b = std::countr_zero(delta_mask);
+            delta_xor ^= zplayer[b] ^ zopponent[b];
+            delta_mask &= delta_mask - 1;
+        }
+        uint64_t new_hash = hash_cache_ ^ delta_xor ^ zopponent[pos];
+        hash_cache_ = new_hash;
+    }
+    /** @brief Restore previous player/opponent/hash state */
+    void restore_state(uint64_t prev_player, uint64_t prev_opponent, uint64_t prev_hash) {
+        player = prev_player;
+        opponent = prev_opponent;
+        hash_cache_ = prev_hash;
+    }
     
     // ==================== Internal Optimized Algorithms ====================
     

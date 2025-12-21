@@ -10,7 +10,7 @@
  */
 
 #include "ai/StabilityAnalyzer.hpp"
-#include "core/Board.hpp"
+#include "../src/core/Board.hpp"
 #include <iostream>
 #include <cassert>
 #include <iomanip>

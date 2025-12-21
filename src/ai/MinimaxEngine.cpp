@@ -10,6 +10,22 @@
 
 namespace reversi::ai {
 
+// Lightweight static positional weights to support fast move ordering.
+// Values chosen to prefer corners and edges and penalize squares adjacent to corners.
+static constexpr int POSITION_WEIGHTS[64] = {
+    1000, -250,  50,  50,  50,  50, -250, 1000,
+   -250, -500,  10,  10,  10,  10, -500, -250,
+     50,   10,  20,  20,  20,  20,   10,   50,
+     50,   10,  20,  20,  20,  20,   10,   50,
+     50,   10,  20,  20,  20,  20,   10,   50,
+     50,   10,  20,  20,  20,  20,   10,   50,
+   -250, -500,  10,  10,  10,  10, -500, -250,
+   1000, -250,  50,  50,  50,  50, -250, 1000
+};
+
+// Small move list threshold for stack-buffer optimization
+static constexpr size_t SMALL_MOVE_LIMIT = 16;
+
 // Infinity constant (avoid overflow in negation)
 constexpr int INF = std::numeric_limits<int>::max() / 2;
 
@@ -17,12 +33,29 @@ constexpr int INF = std::numeric_limits<int>::max() / 2;
 MinimaxEngine::MinimaxEngine() : config_(), tt_(config_.tt_size_bits) {
     clear_killers();
     last_stats_.reset();
+    pvs_zero_window_failures_ = 0;
+    pvs_researches_ = 0;
+    pvs_zero_window_beta_cutoffs_ = 0;
+    pvs_zero_window_failures_per_ply_.fill(0);
+    pvs_researches_per_ply_.fill(0);
+    pvs_zero_window_beta_cutoffs_per_ply_.fill(0);
+    moves_scratch_.reserve(64);
+    move_scores_scratch_.reserve(64);
+    history_table_.fill(0);
 }
 
 MinimaxEngine::MinimaxEngine(const Config& config) 
     : config_(config), tt_(config.tt_size_bits) {
     clear_killers();
     last_stats_.reset();
+    pvs_zero_window_failures_ = 0;
+    pvs_researches_ = 0;
+    pvs_zero_window_beta_cutoffs_ = 0;
+    pvs_zero_window_failures_per_ply_.fill(0);
+    pvs_researches_per_ply_.fill(0);
+    pvs_zero_window_beta_cutoffs_per_ply_.fill(0);
+    moves_scratch_.reserve(64);
+    history_table_.fill(0);
 }
 
 void MinimaxEngine::SearchResult::print() const {
@@ -45,6 +78,8 @@ MinimaxEngine::SearchResult MinimaxEngine::find_best_move(
     time_exceeded_ = false;
     current_ply_ = 0;
     clear_killers();
+    // Slightly decay history heuristic to avoid unbounded growth across moves.
+    decay_history();
     
     // Calculate time limit based on game phase
     if (config_.time_limit_ms > 0) {
@@ -58,7 +93,23 @@ MinimaxEngine::SearchResult MinimaxEngine::find_best_move(
         tt_.reset_stats();
     }
     
-    const auto moves = board.get_legal_moves();
+    moves_scratch_.clear();
+    board.get_legal_moves(moves_scratch_);
+    const auto& moves = moves_scratch_;
+    int small_moves_stack[SMALL_MOVE_LIMIT];
+    const int* moves_ptr = nullptr;
+    size_t moves_n = moves.size();
+    if (moves_n == 0) {
+        auto end = Clock::now();
+        double time_ms = std::chrono::duration<double, std::milli>(end - search_start_).count();
+        return {-1, 0, 0, 0, time_ms};
+    }
+    if (moves_n <= SMALL_MOVE_LIMIT) {
+        for (size_t _i = 0; _i < moves_n; ++_i) small_moves_stack[_i] = moves[_i];
+        moves_ptr = small_moves_stack;
+    } else {
+        moves_ptr = moves.data();
+    }
     
     // Special case: no legal moves (should pass)
     if (moves.empty()) {
@@ -85,21 +136,25 @@ MinimaxEngine::SearchResult MinimaxEngine::find_best_move(
     int alpha = -INF;
     int beta = INF;
     
-    // Root level: search all legal moves
-    for (int move : moves) {
+    // Root level: search all legal moves (use one mutable tmp board to avoid per-move copies)
+    reversi::core::Board tmp_root = board;
+    for (size_t _mi = 0; _mi < moves_n; ++_mi) {
+        int move = moves_ptr[_mi];
         if (time_exceeded()) break;
-        
-        // Make move
-        reversi::core::Board next = board;
-        next.make_move(move);
-        
+
+        uint64_t prev_p = tmp_root.get_player_bb();
+        uint64_t prev_o = tmp_root.get_opponent_bb();
+        uint64_t prev_hash = tmp_root.hash();
+        tmp_root.apply_move_no_history(move);
+
         // Search opponent's response
         int score;
         if (config_.use_pvs) {
-            score = -pvs(next, config_.max_depth - 1, -beta, -alpha, false);
+            score = -pvs(tmp_root, config_.max_depth - 1, -beta, -alpha, false);
         } else {
-            score = -negamax(next, config_.max_depth - 1, -beta, -alpha);
+            score = -negamax(tmp_root, config_.max_depth - 1, -beta, -alpha);
         }
+        tmp_root.restore_state(prev_p, prev_o, prev_hash);
         
         // Update best move
         if (score > best_score) {
@@ -118,6 +173,17 @@ MinimaxEngine::SearchResult MinimaxEngine::find_best_move(
     auto end = Clock::now();
     double time_ms = std::chrono::duration<double, std::milli>(end - search_start_).count();
     
+    // Print lightweight PVS diagnostics for tuning (only when PVS enabled)
+    if (config_.use_pvs) {
+        // Reset counters for next search (diagnostics retained internally; no console IO)
+        pvs_zero_window_failures_ = 0;
+        pvs_researches_ = 0;
+        pvs_zero_window_beta_cutoffs_ = 0;
+        pvs_zero_window_failures_per_ply_.fill(0);
+        pvs_researches_per_ply_.fill(0);
+        pvs_zero_window_beta_cutoffs_per_ply_.fill(0);
+    }
+
     return {
         best_move,
         best_score,
@@ -127,7 +193,7 @@ MinimaxEngine::SearchResult MinimaxEngine::find_best_move(
     };
 }
 
-int MinimaxEngine::negamax(
+inline int MinimaxEngine::negamax(
     reversi::core::Board& board, 
     int depth, 
     int alpha, 
@@ -196,8 +262,11 @@ int MinimaxEngine::negamax(
         return score;
     }
     
-    // Get legal moves for current player
-    const auto moves = board.get_legal_moves();
+    // Get legal moves for current player (reuse member buffer to avoid allocations)
+    moves_scratch_.clear();
+    moves_scratch_.reserve(32);
+    board.get_legal_moves(moves_scratch_);
+    const auto& moves = moves_scratch_;
     
     // No legal moves: must pass
     if (moves.empty()) {
@@ -209,9 +278,14 @@ int MinimaxEngine::negamax(
         return score;
     }
     
+    // Cache frequently-used config flags locally to reduce member access and branches
+    const bool use_alpha = config_.use_alpha_beta;
+    const bool use_killer = config_.use_killer_moves;
+    const bool use_trans = config_.use_transposition;
+
     // Move ordering: use comprehensive ordering if enabled
     std::vector<int> ordered_moves;
-    if (config_.use_killer_moves || config_.use_transposition) {
+    if (use_killer || use_trans) {
         ordered_moves = order_moves(board, moves);
     } else {
         ordered_moves = moves;
@@ -223,28 +297,33 @@ int MinimaxEngine::negamax(
     int original_alpha = alpha;
     
     for (int move : ordered_moves) {
-        // Make move
-        reversi::core::Board next = board;
-        next.make_move(move);
-        
+        // Apply move in-place (fast path) and restore after recursion
+        uint64_t prev_p = board.get_player_bb();
+        uint64_t prev_o = board.get_opponent_bb();
+        uint64_t prev_hash = board.hash();
+        board.apply_move_no_history(move);
         // Recursive search (opponent's turn, negate score)
-        int score = -negamax(next, depth - 1, -beta, -alpha);
+        int score = -negamax(board, depth - 1, -beta, -alpha);
+        // Restore board
+        board.restore_state(prev_p, prev_o, prev_hash);
         
-        // Update best score and move
+        // Update best score and move (branch predicted)
         if (score > best_score) {
             best_score = score;
             best_move = move;
         }
-        
-        // Alpha-Beta pruning
-        if (config_.use_alpha_beta) {
-            alpha = std::max(alpha, score);
+
+        // Alpha-Beta pruning (use local flag)
+        if (use_alpha) {
+            if (score > alpha) alpha = score;
             if (alpha >= beta) {
                 // Beta cutoff: opponent won't allow this position
-                // Update killer move
-                if (config_.use_killer_moves) {
+                // Update killer move (use local flag to avoid member access)
+                if (use_killer) {
                     update_killer(move, current_ply_);
                 }
+                    // Update history heuristic for this move
+                    update_history(move, depth);
                 break;
             }
         }
@@ -306,33 +385,48 @@ MinimaxEngine::SearchResult MinimaxEngine::iterative_deepening_search(
         
         SearchResult result;
         
-        // Use aspiration windows if enabled and we have a predicted score
-        if (config_.use_aspiration && depth > 1 && predicted_score != 0) {
+        // Use aspiration windows if enabled and we have a predicted score.
+        // Avoid using aspiration at very shallow depths during iterative deepening to reduce noisy re-searches.
+        if (config_.use_aspiration && depth > 2 && predicted_score != 0) {
             result = aspiration_search(board, depth, predicted_score);
         } else {
             // Standard search
             int alpha = -INF;
             int beta = INF;
             
-            const auto moves = board.get_legal_moves();
-            if (moves.empty()) {
+            // Compute root ordering per-depth when doing iterative deepening so TT and previous searches
+            // can update move ordering; for non-ID callers this will just run once.
+            moves_scratch_.clear();
+            board.get_legal_moves(moves_scratch_);
+            std::vector<int> root_ordered = order_moves(board, moves_scratch_);
+            const auto& moves = root_ordered;
+            int small_moves_stack[SMALL_MOVE_LIMIT];
+            const int* moves_ptr = nullptr;
+            size_t moves_n = moves.size();
+            if (moves_n == 0) {
                 break;
+            } else if (moves_n <= SMALL_MOVE_LIMIT) {
+                for (size_t _i = 0; _i < moves_n; ++_i) small_moves_stack[_i] = moves[_i];
+                moves_ptr = small_moves_stack;
+            } else {
+                moves_ptr = moves.data();
             }
             
             int best_move = moves[0];
             int best_score = -INF;
             
-            for (int move : moves) {
+            for (size_t _mi = 0; _mi < moves_n; ++_mi) {
+                int move = moves_ptr[_mi];
                 if (time_exceeded()) break;
-                
-                reversi::core::Board next = board;
-                next.make_move(move);
-                
+
+                reversi::core::Board tmp = board;
+                tmp.apply_move_no_history(move);
+
                 int score;
                 if (config_.use_pvs) {
-                    score = -pvs(next, depth - 1, -beta, -alpha, false);
+                    score = -pvs(tmp, depth - 1, -beta, -alpha, false);
                 } else {
-                    score = -negamax(next, depth - 1, -beta, -alpha);
+                    score = -negamax(tmp, depth - 1, -beta, -alpha);
                 }
                 
                 if (score > best_score) {
@@ -417,7 +511,12 @@ MinimaxEngine::SearchResult MinimaxEngine::aspiration_search(
 {
     using Clock = std::chrono::high_resolution_clock;
     
-    const int window = config_.aspiration_window;
+    // For shallow depths aspiration windows can be too narrow and cause noisy re-searches.
+    int window = config_.aspiration_window;
+    if (depth <= 5) {
+        // widen window at shallow depths to reduce re-search noise
+        window = std::max(window, 200);
+    }
     int alpha = predicted_score - window;
     int beta = predicted_score + window;
     
@@ -521,7 +620,7 @@ MinimaxEngine::SearchResult MinimaxEngine::aspiration_search(
 }
 
 // Week 6: Principal Variation Search (PVS) / NegaScout
-int MinimaxEngine::pvs(
+inline int MinimaxEngine::pvs(
     reversi::core::Board& board, 
     int depth, 
     int alpha, 
@@ -576,10 +675,22 @@ int MinimaxEngine::pvs(
         --current_ply_;
         return score;
     }
+
+    // Fallback: if this ply has shown many zero-window failures, skip PVS here
+    // Use configurable per-ply threshold to fall back to negamax when PVS shows many failures.
+    const int PVS_FAILURE_THRESHOLD = config_.pvs_failure_threshold;
+    if (config_.use_pvs && pvs_zero_window_failures_per_ply_[current_ply_] > PVS_FAILURE_THRESHOLD) {
+        // Use standard negamax (full-window) at this node to avoid repeated zero-window re-searches
+        int fallback_score = negamax(board, depth, alpha, beta);
+        --current_ply_;
+        return fallback_score;
+    }
     
-    // Get legal moves
-    const auto moves = board.get_legal_moves();
-    
+    // Get legal moves (reuse buffer to avoid allocations)
+    moves_scratch_.clear();
+    board.get_legal_moves(moves_scratch_);
+    const auto& moves = moves_scratch_;
+
     // No legal moves: must pass
     if (moves.empty()) {
         reversi::core::Board next = board;
@@ -596,20 +707,30 @@ int MinimaxEngine::pvs(
     int best_move = ordered_moves[0];
     int original_alpha = alpha;
     
+    // Cache config flags locally
+    const bool use_alpha = config_.use_alpha_beta;
+    const bool use_killer = config_.use_killer_moves;
+
     // First move: full window search
     {
-        reversi::core::Board next = board;
-        next.make_move(ordered_moves[0]);
-        best_score = -pvs(next, depth - 1, -beta, -alpha, true);
+        // Apply first move in-place (fast path) and restore after search
+        uint64_t prev_p = board.get_player_bb();
+        uint64_t prev_o = board.get_opponent_bb();
+        uint64_t prev_hash = board.hash();
+        board.apply_move_no_history(ordered_moves[0]);
+        best_score = -pvs(board, depth - 1, -beta, -alpha, true);
         best_move = ordered_moves[0];
+        // Restore board
+        board.restore_state(prev_p, prev_o, prev_hash);
         
-        if (config_.use_alpha_beta) {
-            alpha = std::max(alpha, best_score);
+        if (use_alpha) {
+            if (best_score > alpha) alpha = best_score;
             if (alpha >= beta) {
                 // Beta cutoff
-                if (config_.use_killer_moves) {
+                if (use_killer) {
                     update_killer(ordered_moves[0], current_ply_);
                 }
+                    update_history(ordered_moves[0], depth);
                 --current_ply_;
                 return best_score;
             }
@@ -620,41 +741,62 @@ int MinimaxEngine::pvs(
     for (size_t i = 1; i < ordered_moves.size(); ++i) {
         if (time_exceeded()) break;
         
-        reversi::core::Board next = board;
-        next.make_move(ordered_moves[i]);
-        
+        // Apply move in-place and restore after
+        uint64_t prev_p = board.get_player_bb();
+        uint64_t prev_o = board.get_opponent_bb();
+        uint64_t prev_hash = board.hash();
+        board.apply_move_no_history(ordered_moves[i]);
         // Zero window search: assume this move is not better
         // Search with window [alpha, alpha+1] to test if score > alpha
-        int score = -pvs(next, depth - 1, -alpha - 1, -alpha, false);
+        int score = -pvs(board, depth - 1, -alpha - 1, -alpha, false);
         
-        // If zero window fails (score > alpha), re-search with full window
-        // Standard PVS: re-search if score > alpha (not just if in range)
-        if (score > alpha) {
+        // If zero window fails, decide whether to re-search.
+    // Use runtime-configurable PVS research margin
+    const int PVS_RESEARCH_MARGIN = config_.pvs_research_margin;
             if (score >= beta) {
-                // Beta cutoff, no need to re-search
-                if (config_.use_killer_moves) {
-                    update_killer(ordered_moves[i], current_ply_);
-                }
-                best_score = score;
-                best_move = ordered_moves[i];
-                break;
+            // Zero-window exceeded beta: immediate beta-cut
+            ++pvs_zero_window_failures_;
+            if (current_ply_ >= 0 && current_ply_ < MAX_DEPTH) {
+                ++pvs_zero_window_failures_per_ply_[current_ply_];
+                ++pvs_zero_window_beta_cutoffs_per_ply_[current_ply_];
             }
-            // Re-search with full window [alpha, beta]
-            score = -pvs(next, depth - 1, -beta, -alpha, true);
+            ++pvs_zero_window_beta_cutoffs_;
+            if (config_.use_killer_moves) {
+                update_killer(ordered_moves[i], current_ply_);
+            }
+                // Update history heuristic for this move causing beta cutoff
+                update_history(ordered_moves[i], depth);
+            best_score = score;
+            best_move = ordered_moves[i];
+            break;
+        } else if (score > alpha + PVS_RESEARCH_MARGIN) {
+            // Zero-window failed with sufficient margin: re-search with full window
+            ++pvs_zero_window_failures_;
+            if (current_ply_ >= 0 && current_ply_ < MAX_DEPTH) {
+                ++pvs_zero_window_failures_per_ply_[current_ply_];
+            }
+            ++pvs_researches_;
+            if (current_ply_ >= 0 && current_ply_ < MAX_DEPTH) {
+                ++pvs_researches_per_ply_[current_ply_];
+            }
+            score = -pvs(board, depth - 1, -beta, -alpha, true);
         }
         
         if (score > best_score) {
             best_score = score;
             best_move = ordered_moves[i];
         }
+        // Restore board after recursive search
+        board.restore_state(prev_p, prev_o, prev_hash);
         
-        if (config_.use_alpha_beta) {
-            alpha = std::max(alpha, score);
+        if (use_alpha) {
+            if (score > alpha) alpha = score;
             if (alpha >= beta) {
                 // Beta cutoff
-                if (config_.use_killer_moves) {
+                if (use_killer) {
                     update_killer(ordered_moves[i], current_ply_);
                 }
+                    update_history(ordered_moves[i], depth);
                 break;
             }
         }
@@ -715,6 +857,17 @@ int MinimaxEngine::calculate_time_limit(
     }
 }
 
+MinimaxEngine::PVSDiagnostics MinimaxEngine::get_pvs_diagnostics() const {
+    PVSDiagnostics d;
+    d.zero_window_failures = pvs_zero_window_failures_;
+    d.researches = pvs_researches_;
+    d.zero_window_beta_cutoffs = pvs_zero_window_beta_cutoffs_;
+    d.failures_per_ply.assign(pvs_zero_window_failures_per_ply_.begin(), pvs_zero_window_failures_per_ply_.end());
+    d.researches_per_ply.assign(pvs_researches_per_ply_.begin(), pvs_researches_per_ply_.end());
+    d.beta_cutoffs_per_ply.assign(pvs_zero_window_beta_cutoffs_per_ply_.begin(), pvs_zero_window_beta_cutoffs_per_ply_.end());
+    return d;
+}
+
 bool MinimaxEngine::time_exceeded() const {
     if (time_limit_ms_ <= 0) return false;
     
@@ -750,6 +903,21 @@ void MinimaxEngine::clear_killers() {
     killer2_.fill(-1);
 }
 
+// Update history heuristic for a move that caused a beta-cutoff.
+void MinimaxEngine::update_history(int move, int depth) {
+    if (move < 0 || move >= 64) return;
+    // Heuristic: bigger depth increments history more (prefer moves that cause deep cutoffs)
+    history_table_[move] += (depth * depth + 1);
+}
+
+// Apply decay to the history table to slowly forget old entries.
+void MinimaxEngine::decay_history() {
+    // Gentle decay: subtract 1/8 of the current value (v -= v>>3), avoids rapid zeroing.
+    for (int &v : history_table_) {
+        v -= (v >> 3);
+    }
+}
+
 // Week 6: Move ordering
 std::vector<int> MinimaxEngine::order_moves(
     const reversi::core::Board& board, 
@@ -757,9 +925,9 @@ std::vector<int> MinimaxEngine::order_moves(
 {
     if (moves.empty()) return moves;
     
-    // Create move-score pairs
-    std::vector<std::pair<int, int>> move_scores;
-    move_scores.reserve(moves.size());
+    // Create move-score pairs using reusable scratch vector to avoid allocations
+    move_scores_scratch_.clear();
+    move_scores_scratch_.reserve(moves.size());
     
     // Get TT best move (if available)
     int tt_best_move = -1;
@@ -773,42 +941,91 @@ std::vector<int> MinimaxEngine::order_moves(
     
     // Pre-calculate flip counts to avoid repeated Board copies
     // Use const reference and calc_flip which doesn't modify board
+    bool tt_move_used = false;
+    // Simple conservative ordering: TT, killer, positional weight, flip count.
+    move_scores_scratch_.clear();
+    move_scores_scratch_.reserve(moves.size());
     for (int move : moves) {
         int score = 0;
-        
-        // TT best move gets highest priority
         if (move == tt_best_move) {
             score += 10000;
+            tt_move_used = true;
         }
-        
-        // Killer moves get bonus
         if (config_.use_killer_moves) {
             score += get_killer_bonus(move, current_ply_);
         }
-        
-        // Evaluation-based ordering (simple heuristic)
-        // Moves that flip more pieces are generally better
-        // Use calc_flip which doesn't modify the board (const method)
+        int pos_weight = POSITION_WEIGHTS[move];
+        score += pos_weight;
         uint64_t flip_mask = board.calc_flip(move);
-        int flip_count = std::popcount(flip_mask);
-        score += flip_count * 10;
-        
-        move_scores.emplace_back(move, score);
+        int flip_count = static_cast<int>(std::popcount(flip_mask));
+        score += flip_count * 4;
+        move_scores_scratch_.emplace_back(move, score);
     }
     
-    // Sort by score (descending)
-    std::sort(move_scores.begin(), move_scores.end(),
-              [](const auto& a, const auto& b) {
-                  return a.second > b.second;
-              });
-    
-    // Extract ordered moves
+    // Do a very cheap partial refinement on a small number of top candidates to improve PVS ordering.
+    // At root we refine more candidates (higher potential benefit); in deeper plies keep it minimal.
+    int top_k = 0;
+    if (current_ply_ == 0) {
+        // Be conservative at root: only refine top-1 to avoid noisy re-ordering.
+        top_k = static_cast<int>(std::min<size_t>(1, move_scores_scratch_.size()));
+    } else if (current_ply_ >= 3) {
+        top_k = 1;
+    } else {
+        top_k = 2;
+    }
+    if (top_k > 0 && move_scores_scratch_.size() > 1) {
+        if (top_k < static_cast<int>(move_scores_scratch_.size())) {
+            std::partial_sort(move_scores_scratch_.begin(), move_scores_scratch_.begin() + top_k, move_scores_scratch_.end(),
+                [](const auto& a, const auto& b){ return a.second > b.second; });
+        } else {
+            // small set: full sort is fine
+            std::sort(move_scores_scratch_.begin(), move_scores_scratch_.end(),
+                [](const auto& a, const auto& b){ return a.second > b.second; });
+        }
+
+        // Evaluate the top_k candidates with a lightweight evaluation to improve ordering.
+        for (int i = 0; i < top_k; ++i) {
+            int mv = move_scores_scratch_[i].first;
+            // quick deepening: evaluate resulting position to improve ordering
+            reversi::core::Board next = board;
+            next.make_move(mv);
+            int eval_score = Evaluator::evaluate(next);
+            // amplify evaluation to influence ordering but keep cost low (use shift instead of mul)
+            move_scores_scratch_[i].second += (eval_score << 3); // *8
+        }
+    }
+
+    // Final sort by updated score (descending)
+    // Sort move_scores_scratch_ descending by score.
+    // Use insertion sort for small sizes to avoid allocation/call overhead of std::sort.
+    size_t n = move_scores_scratch_.size();
+    if (n <= 16) {
+        for (size_t i = 1; i < n; ++i) {
+            auto key = move_scores_scratch_[i];
+            size_t j = i;
+            while (j > 0 && move_scores_scratch_[j - 1].second < key.second) {
+                move_scores_scratch_[j] = move_scores_scratch_[j - 1];
+                --j;
+            }
+            move_scores_scratch_[j] = key;
+        }
+    } else {
+        std::sort(move_scores_scratch_.begin(), move_scores_scratch_.end(),
+                  [](const auto& a, const auto& b) { return a.second > b.second; });
+    }
+
+    // Extract ordered moves, ensuring TT best move is placed first if present
     std::vector<int> ordered;
     ordered.reserve(moves.size());
-    for (const auto& [move, score] : move_scores) {
-        ordered.push_back(move);
+    if (tt_best_move >= 0 && tt_move_used) {
+        ordered.push_back(tt_best_move);
     }
-    
+    for (const auto& ms : move_scores_scratch_) {
+        int mv = ms.first;
+        if (mv == tt_best_move) continue;
+        ordered.push_back(mv);
+    }
+
     return ordered;
 }
 

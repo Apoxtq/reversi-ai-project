@@ -8,7 +8,7 @@
  * Tests the legal move generation implementation
  */
 
-#include "core/Board.hpp"
+#include "../src/core/Board.hpp"
 #include <iostream>
 #include <iomanip>
 #include <vector>

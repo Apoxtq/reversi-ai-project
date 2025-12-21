@@ -7,7 +7,7 @@
  */
 
 #include "ai/MCTSEngine.hpp"
-#include "core/Board.hpp"
+#include "../src/core/Board.hpp"
 #include "core/Move.hpp"
 #include "test_utils.hpp"
 #include <cassert>
@@ -31,7 +31,7 @@ void test_mcts_basic_search() {
     assert(stats.simulations_performed > 0);
     assert(stats.tree_nodes_created > 0);
     
-    std::cout << "  ✓ Basic search passed\n";
+    std::cout << "  [OK] Basic search passed\n";
     std::cout << "    Simulations: " << stats.simulations_performed << "\n";
     std::cout << "    Tree nodes: " << stats.tree_nodes_created << "\n";
 }
@@ -50,7 +50,7 @@ void test_mcts_tree_growth() {
     assert(stats.max_tree_depth >= 0);
     assert(stats.average_playout_length > 0);
     
-    std::cout << "  ✓ Tree growth test passed\n";
+    std::cout << "  [OK] Tree growth test passed\n";
     std::cout << "    Max depth: " << stats.max_tree_depth << "\n";
     std::cout << "    Avg playout length: " << stats.average_playout_length << "\n";
 }
@@ -69,7 +69,7 @@ void test_mcts_heuristic_playout() {
     assert(stats.simulations_performed > 0);
     assert(stats.average_playout_length > 0);
     
-    std::cout << "  ✓ Heuristic playout test passed\n";
+    std::cout << "  [OK] Heuristic playout test passed\n";
 }
 
 void test_mcts_ucb1_selection() {
@@ -89,7 +89,7 @@ void test_mcts_ucb1_selection() {
         assert(stats.move_visit_counts.size() == stats.move_win_rates.size());
     }
     
-    std::cout << "  ✓ UCB1 selection test passed\n";
+    std::cout << "  [OK] UCB1 selection test passed\n";
 }
 
 void test_mcts_terminal_position() {
@@ -115,7 +115,7 @@ void test_mcts_terminal_position() {
     // Should return a valid move or pass
     assert(move.is_valid() || move.is_pass());
     
-    std::cout << "  ✓ Terminal position test passed\n";
+    std::cout << "  [OK] Terminal position test passed\n";
 }
 
 void test_mcts_configuration() {
@@ -137,7 +137,7 @@ void test_mcts_configuration() {
     assert(engine2.get_config().max_time_ms == 3000);
     assert(engine2.get_config().ucb1_c == 2.0);
     
-    std::cout << "  ✓ Configuration test passed\n";
+    std::cout << "  [OK] Configuration test passed\n";
 }
 
 void test_mcts_statistics() {
@@ -153,7 +153,7 @@ void test_mcts_statistics() {
     assert(stats.time_elapsed_ms > 0);
     assert(stats.nodes_per_second >= 0);
     
-    std::cout << "  ✓ Statistics test passed\n";
+    std::cout << "  [OK] Statistics test passed\n";
     std::cout << "    Time: " << stats.time_elapsed_ms << " ms\n";
     std::cout << "    Speed: " << stats.nodes_per_second << " sims/sec\n";
 }
@@ -173,7 +173,7 @@ void test_mcts_reset() {
     assert(stats2.simulations_performed == 0);
     assert(stats2.tree_nodes_created == 0);
     
-    std::cout << "  ✓ Reset test passed\n";
+    std::cout << "  [OK] Reset test passed\n";
 }
 
 int main() {

@@ -36,12 +36,13 @@ namespace reversi::ai {
  */
 struct TTEntry {
     uint64_t hash;        ///< 64-bit Zobrist hash (for verification)
-    int16_t score;        ///< Evaluation score
+    uint32_t hash_low;    ///< low 32-bits of hash for faster pre-checks
+    int32_t score;        ///< Evaluation score (use 32-bit to avoid overflow)
     int8_t depth;         ///< Search depth
-    uint8_t flag;          ///< Entry type: EXACT, LOWER_BOUND, UPPER_BOUND
+    uint8_t flag;         ///< Entry type: EXACT, LOWER_BOUND, UPPER_BOUND
     int8_t best_move;     ///< Best move found (0-63, or -1)
     
-    // Padding to align to 16 bytes (cache line friendly)
+    // Padding to align to 24/32 bytes depending on platform (kept minimal)
     int8_t padding[3];
     
     /**
@@ -63,6 +64,7 @@ struct TTEntry {
      */
     void clear() {
         hash = 0;
+        hash_low = 0;
     }
 };
 

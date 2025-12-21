@@ -80,12 +80,14 @@ Board::Board()
     : player(INITIAL_PLAYER), opponent(INITIAL_OPPONENT) {
     init_zobrist();
     hash_cache_ = recompute_hash(player, opponent);
+    history_.reserve(128);
 }
 
 Board::Board(uint64_t p, uint64_t o) 
     : player(p), opponent(o) {
     init_zobrist();
     hash_cache_ = recompute_hash(player, opponent);
+    history_.reserve(128);
 }
 
 Board::Board(const std::string& board_str) {
@@ -345,6 +347,8 @@ uint64_t Board::calc_flip(int pos) const {
     return flipped;
 }
 
+// apply_move_no_history implemented inline in header (Board.hpp)
+
 // ==================== Move Execution ====================
 
 void Board::make_move(int pos) {
@@ -373,8 +377,23 @@ void Board::make_move(int pos) {
     // Swap player and opponent for next turn
     std::swap(player, opponent);
 
-    // Update hash cache by recomputation (safe baseline; can be optimized later)
-    hash_cache_ = recompute_hash(player, opponent);
+    // Incremental Zobrist update instead of full recompute
+    uint64_t prev_player = history_.back().prev_player;
+    uint64_t prev_opponent = history_.back().prev_opponent;
+    // compute delta masks similar to apply_move_no_history
+    uint64_t delta_mask1 = prev_player;
+    uint64_t delta_mask2 = prev_opponent & ~flipped;
+    uint64_t delta_mask = delta_mask1 | delta_mask2;
+    const uint64_t* zplayer = zobrist_player;
+    const uint64_t* zopponent = zobrist_opponent;
+    uint64_t delta_xor = 0;
+    while (delta_mask) {
+        int b = std::countr_zero(delta_mask);
+        delta_xor ^= zplayer[b] ^ zopponent[b];
+        delta_mask &= delta_mask - 1;
+    }
+    uint64_t new_hash = history_.back().prev_hash ^ delta_xor ^ zopponent[pos];
+    hash_cache_ = new_hash;
 }
 
 void Board::undo_move(int pos) {

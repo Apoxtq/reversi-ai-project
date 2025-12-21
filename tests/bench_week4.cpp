@@ -8,7 +8,7 @@
  * 3. Phase-aware evaluation impact
  */
 
-#include "core/Board.hpp"
+#include "../src/core/Board.hpp"
 #include "ai/Evaluator.hpp"
 #include "ai/Evaluator_Week4.hpp"
 #include "ai/StabilityAnalyzer.hpp"
@@ -172,10 +172,10 @@ int main() {
     std::cout << "  Fast mode speedup: " << GREEN << "+" << speedup_fast << "%" << RESET << "\n";
     
     std::cout << "\nTarget metrics:\n";
-    std::cout << "  ✓ Week 4 Full: " << (results[1].ops_per_sec / 1e6) << " M ops/s ";
+    std::cout << "  [OK] Week 4 Full: " << (results[1].ops_per_sec / 1e6) << " M ops/s ";
     std::cout << (results[1].ops_per_sec > 30e6 ? GREEN"[PASS]" : YELLOW"[OK]") << RESET << "\n";
     
-    std::cout << "  ✓ Week 4 Fast: " << (results[2].ops_per_sec / 1e6) << " M ops/s ";
+    std::cout << "  [OK] Week 4 Fast: " << (results[2].ops_per_sec / 1e6) << " M ops/s ";
     std::cout << (results[2].ops_per_sec > 50e6 ? GREEN"[EXCELLENT]" : GREEN"[PASS]") << RESET << "\n";
     
     // Component breakdown
@@ -195,7 +195,7 @@ int main() {
     std::cout << "  Corner stability: " << YELLOW << (stability_speed / 1e6) 
               << " M ops/s" << RESET << "\n";
     
-    std::cout << "\n" << BOLD << GREEN << "✓ Benchmark complete!" << RESET << "\n\n";
+    std::cout << "\n" << BOLD << GREEN << "[OK] Benchmark complete!" << RESET << "\n\n";
     
     return 0;
 }

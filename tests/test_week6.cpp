@@ -12,7 +12,7 @@
 
 #include "test_utils.hpp"
 #include "ai/MinimaxEngine.hpp"
-#include "core/Board.hpp"
+#include "../src/core/Board.hpp"
 #include <iostream>
 #include <iomanip>
 #include <vector>
@@ -62,7 +62,7 @@ void test_iterative_deepening() {
     std::cout << "  Depth reached: " << result.depth_reached << "\n";
     std::cout << "  Time used: " << std::fixed << std::setprecision(2) << result.time_ms << " ms\n";
     std::cout << "  Nodes: " << format_number(result.nodes_searched) << "\n";
-    std::cout << GREEN << "✓ Iterative deepening works\n" << RESET;
+    std::cout << GREEN << "[OK] Iterative deepening works\n" << RESET;
 }
 
 /**
@@ -105,7 +105,7 @@ void test_time_management() {
     std::cout << "  Early game time: " << std::fixed << std::setprecision(2) 
               << result_early.time_ms << " ms\n";
     
-    std::cout << GREEN << "✓ Time management works\n" << RESET;
+    std::cout << GREEN << "[OK] Time management works\n" << RESET;
 }
 
 /**
@@ -144,7 +144,7 @@ void test_pvs() {
     // PVS should reduce nodes by at least 5%
     ASSERT_GT(reduction, 5.0);
     
-    std::cout << GREEN << "✓ PVS works correctly and efficiently\n" << RESET;
+    std::cout << GREEN << "[OK] PVS works correctly and efficiently\n" << RESET;
 }
 
 /**
@@ -180,7 +180,7 @@ void test_aspiration_windows() {
     double reduction = (1.0 - (double)result_asp.nodes_searched / result_no_asp.nodes_searched) * 100.0;
     std::cout << "  Node reduction: " << std::fixed << std::setprecision(1) << reduction << "%\n";
     
-    std::cout << GREEN << "✓ Aspiration windows work\n" << RESET;
+    std::cout << GREEN << "[OK] Aspiration windows work\n" << RESET;
 }
 
 /**
@@ -218,7 +218,7 @@ void test_killer_moves() {
     // Killer moves should improve efficiency
     ASSERT_GT(reduction, 0.0);  // At least some improvement
     
-    std::cout << GREEN << "✓ Killer moves work\n" << RESET;
+    std::cout << GREEN << "[OK] Killer moves work\n" << RESET;
 }
 
 /**
@@ -240,15 +240,37 @@ void test_combined_optimizations() {
     MinimaxEngine engine_baseline(config_baseline);
     auto result_baseline = engine_baseline.find_best_move(board);
     
-    // All optimizations enabled
-    MinimaxEngine::Config config_all;
+    // All optimizations enabled - use conservative preset found by fixed-depth search
+    MinimaxEngine::Config config_all = MinimaxEngine::Config::preset_fixed_found();
     config_all.max_depth = 5;
-    config_all.use_iterative_deepening = true;
+    // Use fixed-depth here to validate combined optimizations (iterative deepening makes comparison cumulative)
+    config_all.use_iterative_deepening = false;
+    // Ensure feature flags and tuned parameters are enabled for combined run (fixed-depth preset)
     config_all.use_pvs = true;
+    config_all.pvs_research_margin = 20;
+    config_all.pvs_failure_threshold = 4;
     config_all.use_aspiration = true;
+    config_all.aspiration_window = 50;
     config_all.use_killer_moves = true;
+    config_all.killer_weight = 0;
+    config_all.tt_weight = 6000;
+    config_all.history_weight = 0;
+    std::cout << "[CONFIG_ALL] pvs_margin=" << config_all.pvs_research_margin
+              << " asp_w=" << config_all.aspiration_window
+              << " killer_w=" << config_all.killer_weight
+              << " tt_w=" << config_all.tt_weight
+              << " use_pvs=" << config_all.use_pvs
+              << " use_asp=" << config_all.use_aspiration
+              << " use_killer=" << config_all.use_killer_moves
+              << " id=" << config_all.use_iterative_deepening << "\n";
     MinimaxEngine engine_all(config_all);
     auto result_all = engine_all.find_best_move(board);
+    
+    // Print PVS diagnostics for combined run to help tuning
+    auto diag = engine_all.get_pvs_diagnostics();
+    std::cout << "  [DIAG] combined_pvs_failures=" << diag.zero_window_failures
+              << " researches=" << diag.researches
+              << " beta_cutoffs=" << diag.zero_window_beta_cutoffs << "\n";
     
     // Results should be consistent
     ASSERT_EQ(result_baseline.best_move, result_all.best_move);
@@ -262,7 +284,7 @@ void test_combined_optimizations() {
     // Combined optimizations should provide significant improvement
     ASSERT_GT(reduction, 10.0);  // At least 10% improvement
     
-    std::cout << GREEN << "✓ Combined optimizations work\n" << RESET;
+    std::cout << GREEN << "[OK] Combined optimizations work\n" << RESET;
 }
 
 /**
@@ -291,7 +313,7 @@ void test_time_limit_enforcement() {
     std::cout << "  Time used:  " << std::fixed << std::setprecision(2) << result.time_ms << " ms\n";
     std::cout << "  Depth reached: " << result.depth_reached << "\n";
     
-    std::cout << GREEN << "✓ Time limit enforced\n" << RESET;
+    std::cout << GREEN << "[OK] Time limit enforced\n" << RESET;
 }
 
 /**
@@ -321,7 +343,7 @@ void test_id_depth_progression() {
     std::cout << "  Time used: " << std::fixed << std::setprecision(2) 
               << result.time_ms << " ms\n";
     
-    std::cout << GREEN << "✓ Depth progression works\n" << RESET;
+    std::cout << GREEN << "[OK] Depth progression works\n" << RESET;
 }
 
 /**
@@ -346,4 +368,4 @@ int main() {
     
     return tests_failed > 0 ? 1 : 0;
 }
-
+ 

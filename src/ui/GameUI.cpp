@@ -30,19 +30,41 @@ GameUI::GameUI(sf::RenderWindow& window)
 }
 
 void GameUI::initialize() {
+    std::cout << "    [GameUI::initialize] Step 1: Creating MenuSystem..." << std::endl;
+    try {
     // Initialize menu system
     menu_system_ = std::make_unique<MenuSystem>();
+        std::cout << "    [GameUI::initialize] Step 2: MenuSystem created, calling initialize()..." << std::endl;
     menu_system_->initialize();
+        std::cout << "    [GameUI::initialize] Step 3: MenuSystem initialized successfully" << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: Failed to initialize menu system: " << e.what() << std::endl;
+        std::cerr << "Exception type: " << typeid(e).name() << std::endl;
+        // Continue - menu may still work partially
+    } catch (...) {
+        std::cerr << "Warning: Unknown exception during menu system initialization!" << std::endl;
+    }
     
+    try {
     // Initialize event handler
     event_handler_ = std::make_unique<EventHandler>();
     event_handler_->set_event_callback([this](const GameEvent& event) {
         process_game_event(event);
     });
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: Failed to initialize event handler: " << e.what() << std::endl;
+        // Continue - basic events may still work
+    }
     
+    try {
     // Initialize animation system
     animation_system_ = std::make_unique<AnimationSystem>();
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: Failed to initialize animation system: " << e.what() << std::endl;
+        // Continue - animations will be disabled
+    }
     
+    try {
     // Initialize board renderer
     float board_x = UIStyle::SPACING_LG;
     float board_y = UIStyle::CONTROL_BAR_HEIGHT + UIStyle::SPACING_LG;
@@ -50,7 +72,13 @@ void GameUI::initialize() {
         sf::Vector2f(board_x, board_y),
         UIStyle::BOARD_SIZE
     );
+        if (animation_system_) {
     board_renderer_->set_animation_system(animation_system_.get());
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: Failed to initialize board renderer: " << e.what() << std::endl;
+        // Continue - game may still work without board rendering
+    }
 }
 
 void GameUI::run() {
@@ -74,6 +102,11 @@ void GameUI::handle_events() {
         }
         
         if (current_state_ == UIState::MENU) {
+            if (!menu_system_) {
+                // Menu system not initialized - skip event handling
+                continue;
+            }
+            
             menu_system_->handle_event(event);
             
             // Check for menu selection
@@ -95,6 +128,11 @@ void GameUI::handle_events() {
             }
         } else if (current_state_ == UIState::GAME || current_state_ == UIState::GAME_OVER) {
             // Handle game events
+            if (!event_handler_) {
+                // Event handler not initialized - skip event processing
+                continue;
+            }
+            
             auto game_event = event_handler_->process_event(event, board_renderer_.get());
             if (game_event) {
                 process_game_event(*game_event);
@@ -161,7 +199,9 @@ void GameUI::handle_events() {
 
 void GameUI::update(float dt) {
     if (current_state_ == UIState::MENU) {
+        if (menu_system_) {
         menu_system_->update(dt);
+        }
     } else if (current_state_ == UIState::GAME) {
         // Update animation system
         if (animation_system_) {
@@ -226,7 +266,9 @@ void GameUI::render() {
     window_.clear(UIStyle::BACKGROUND_L1);
     
     if (current_state_ == UIState::MENU) {
+        if (menu_system_) {
         menu_system_->render(window_);
+        }
     } else if (current_state_ == UIState::GAME || current_state_ == UIState::GAME_OVER) {
         // Draw control bar
         sf::RectangleShape control_bar(sf::Vector2f(UIStyle::WINDOW_WIDTH, UIStyle::CONTROL_BAR_HEIGHT));
@@ -570,7 +612,9 @@ void GameUI::create_control_buttons() {
 
 void GameUI::transition_to_game() {
     current_state_ = UIState::GAME;
+    if (event_handler_) {
     event_handler_->set_enabled(true);
+    }
 }
 
 void GameUI::transition_to_menu() {
@@ -700,16 +744,8 @@ void GameUI::render_network_status(sf::RenderTarget& target) {
     bool connected = network_game_->is_connected();
     network::NetworkGameState state = network_game_->get_state();
     
-    // Get or create font (with fallback)
-    static sf::Font status_font;
-    static bool font_loaded = false;
-    
-    if (!font_loaded) {
-        // Try to load font from UIStyle or use default
-        // For now, we'll use SFML's default font capability
-        // In a full implementation, this would use UIStyle::get_font()
-        font_loaded = true;  // Mark as attempted (will use system default if needed)
-    }
+    // Don't use static font - avoid initialization order issues
+    // We'll render without text for now (just use colored indicators)
     
     // Position: top-right corner
     float x = UIStyle::WINDOW_WIDTH - 250.0f;

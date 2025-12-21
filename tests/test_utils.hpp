@@ -101,10 +101,10 @@ inline void print_summary() {
     std::cout << "\n========================================\n";
     std::cout << "Test Summary:\n";
     std::cout << "  Total:  " << tests_run << "\n";
-    std::cout << COLOR_GREEN << "  Passed: " << tests_passed << " ✓" << COLOR_RESET << "\n";
+    std::cout << COLOR_GREEN << "  Passed: " << tests_passed << " [OK]" << COLOR_RESET << "\n";
     
     if (tests_failed > 0) {
-        std::cout << COLOR_RED << "  Failed: " << tests_failed << " ✗" << COLOR_RESET << "\n";
+        std::cout << COLOR_RED << "  Failed: " << tests_failed << " [FAIL]" << COLOR_RESET << "\n";
     } else {
         std::cout << "  Failed: 0\n";
     }
@@ -112,9 +112,9 @@ inline void print_summary() {
     std::cout << "========================================\n";
     
     if (tests_failed == 0) {
-        std::cout << COLOR_GREEN << "🎉 ALL TESTS PASSED!" << COLOR_RESET << "\n";
+        std::cout << COLOR_GREEN << "ALL TESTS PASSED!" << COLOR_RESET << "\n";
     } else {
-        std::cout << COLOR_RED << "❌ SOME TESTS FAILED" << COLOR_RESET << "\n";
+        std::cout << COLOR_RED << "SOME TESTS FAILED" << COLOR_RESET << "\n";
     }
 }
 
@@ -191,4 +191,7 @@ inline std::string format_speed(double ops_per_sec) {
 }
 
 } // namespace test
+
+
+
 

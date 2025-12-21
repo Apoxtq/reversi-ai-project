@@ -10,7 +10,7 @@
  * - Combined optimizations performance
  */
 
-#include "core/Board.hpp"
+#include "../src/core/Board.hpp"
 #include "ai/MinimaxEngine.hpp"
 #include <iostream>
 #include <iomanip>
@@ -66,6 +66,14 @@ void print_result(const BenchResult& result) {
 BenchResult benchmark_config(const Board& board, const MinimaxEngine::Config& config, const std::string& name) {
     MinimaxEngine engine(config);
     auto result = engine.find_best_move(board);
+    
+    // Print PVS diagnostics if available (helps tune ordering)
+    if (config.use_pvs) {
+        auto d = engine.get_pvs_diagnostics();
+        std::cout << "  [PVS] zero_window_failures=" << d.zero_window_failures 
+                  << " researches=" << d.researches 
+                  << " beta_cutoffs=" << d.zero_window_beta_cutoffs << "\n";
+    }
     
     BenchResult br;
     br.name = name;
@@ -286,8 +294,7 @@ int main() {
     benchmark_time_limited();
     benchmark_game_phases();
     
-    std::cout << BOLD << GREEN << "\n✓ All benchmarks completed!\n" << RESET;
+    std::cout << BOLD << GREEN << "\n[OK] All benchmarks completed!\n" << RESET;
     
     return 0;
 }
-
